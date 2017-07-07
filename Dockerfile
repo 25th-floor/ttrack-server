@@ -7,17 +7,17 @@ RUN apt-get update \
 	&& apt-get install -y netcat \
 	&& rm -rf /var/lib/apt/lists/*
 
+RUN mkdir /app
+WORKDIR /app
+
 # Installing production dependencies
-ENV NODE_ENV production
-ADD ./package.json /tmp/
-RUN cd /tmp && \
-	npm install
+ADD ./package.json /app
+RUN npm install
 
 COPY . /app
-WORKDIR /app
-RUN cp -R /tmp/node_modules/ /app/node_modules/
-
 COPY ./docker-entrypoint.sh /
-ENTRYPOINT ["/docker-entrypoint.sh"]
 
+ENV NODE_ENV production
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["ttrack-server"]
