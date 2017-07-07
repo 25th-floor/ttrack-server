@@ -10,11 +10,11 @@ services:
     ports:
       - 5432:5432
 
-  test-ttrack:
+  test-ttrack-server:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ttrack-test-app
+    container_name: ttrack-test-server
     environment:
       - DB_USER=postgres
       - DB_PASS=postgres
@@ -25,4 +25,5 @@ services:
       - 8090:8080
     volumes:
       - ./src:/app/src
-      - ./public/images/users:/app/public/images/users
+    depends_on:
+      - test-db
