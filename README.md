@@ -1,8 +1,8 @@
-# TTrack
+# TTrack Server
 
 [![Build Status](https://travis-ci.org/25th-floor/ttrack.svg?branch=master)](https://travis-ci.org/25th-floor/ttrack)
 
-A Time Tracking application. Needs a Postgres Database.
+A Time Tracking application server. Needs a Postgres Database and a client.
 
 ## Getting Stated
 
