@@ -11,7 +11,7 @@ RUN mkdir /app
 WORKDIR /app
 
 # Installing production dependencies
-ADD ./package.json /app
+ADD ./package.json ./package-lock.json /app/
 RUN npm install
 
 COPY . /app
