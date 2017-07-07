@@ -13,17 +13,6 @@ module.exports = {
         'no-console': [1, { allow: ["error", "info"] }],
         "indent": [2, 4, { "SwitchCase": 1 }],
         "class-methods-use-this": 0,
-        'react/jsx-no-bind': [2, {
-            'ignoreRefs': true,
-            'allowBind': true,
-        }],
-        'react/prop-types': [2, { ignore: ['children'] }],
-        "react/jsx-indent": [2, 4],
-        "react/jsx-indent-props": [2, 4],
-        "react/forbid-prop-types": 0,
-        "react/jsx-filename-extension": 0,
-        "react/prefer-stateless-function": 0,
-        "react/require-extension": 0,
         "import/no-extraneous-dependencies": 0,
         "max-len": ["error", 125, 4,
             {
