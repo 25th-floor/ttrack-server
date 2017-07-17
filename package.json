@@ -7,7 +7,7 @@
     "bin": "src"
   },
   "scripts": {
-    "start": "node --use-strict ./src/server/index.js",
+    "start": "babel-node ./src/server/index.js",
     "lint": "eslint ./src",
     "fix-lint": "eslint --fix ./src",
     "flow": "flow check",
@@ -42,6 +42,7 @@
     ]
   },
   "devDependencies": {
+    "babel-cli": "^6.24.1",
     "babel-core": "~6.25",
     "babel-jest": "~20.0",
     "babel-loader": "~7.1",

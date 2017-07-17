@@ -26,7 +26,7 @@ if [ "$1" = 'ttrack-server' ]; then
 	node_modules/.bin/db-migrate up
 
 	# Hand over to the node server
-	exec node --use-strict ./src/server/index.js
+	exec ./node_modules/.bin/babel-node ./src/server/index.js
 fi
 
 exec "$@"
