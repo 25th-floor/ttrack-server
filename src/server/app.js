@@ -1,8 +1,9 @@
 /* eslint-disable import/no-dynamic-require*/
-const resources = require('./resources.js');
-const express = require('express');
-const pg = require('pg');
-const raven = require('raven');
+import express from 'express';
+import pg from 'pg';
+import raven from 'raven';
+
+import resources from './resources';
 
 const app = express();
 
