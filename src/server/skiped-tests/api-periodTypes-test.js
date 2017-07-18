@@ -10,7 +10,7 @@ const API_URI_PERIOD_TYPES = "http://localhost:8080/api/period-types";
 const RESULT_ID = 'pty_id';
 const RESULT_NAME = 'pty_name';
 
-describe.only("ttrack API period-types", function () {
+describe("ttrack API period-types", function () {
     describe("testing GET request", () => {
         it("should return 200 on success", function () {
             const response = chakram.get(API_URI_PERIOD_TYPES);

@@ -20,6 +20,7 @@ module.exports = {
                 if (err) {
                     return console.error('error running select query', err);
                 }
+                console.log(result.rows);
                 cb(result.rows[0]);
                 return true;
             });

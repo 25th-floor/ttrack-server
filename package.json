@@ -10,7 +10,7 @@
     "lint": "eslint ./src",
     "fix-lint": "eslint --fix ./src",
     "flow": "flow check",
-    "test": "jest --no-cache src/server/**/*"
+    "test": "jest --runInBand --no-cache src/server/**/*"
   },
   "author": "25th floor",
   "license": "ISC",

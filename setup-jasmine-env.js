@@ -4,7 +4,7 @@
 
 /*globals jasmine*/
 
-jasmine.VERBOSE = true;
+jasmine.VERBOSE = false;
 
 require('jasmine-expect');
 require('jasmine-expect-moment');
