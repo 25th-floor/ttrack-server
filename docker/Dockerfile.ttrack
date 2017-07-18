@@ -43,9 +43,6 @@ COPY .babelrc ${APPDIR}
 COPY docker/entrypoint.sh /entrypoint.sh
 COPY docker/entrypoint.d /entrypoint.d
 
-# required bin directory ?? 
-COPY /src ${APPDIR}
-
 # install dependencies
 RUN yarn install
 

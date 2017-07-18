@@ -5,7 +5,7 @@ import { PERIOD_TYPE_IDS } from '../../common/testUtils';
 
 const expect = chakram.expect;
 
-const API_URI_PERIOD_TYPES = "http://localhost:8080/api/period-types";
+const API_URI_PERIOD_TYPES = "http://localhost:8081/api/period-types";
 
 const RESULT_ID = 'pty_id';
 const RESULT_NAME = 'pty_name';

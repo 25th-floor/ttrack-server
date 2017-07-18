@@ -8,7 +8,13 @@ import resources from './resources';
 const app = express();
 
 const dbconfigfile = require(`${__dirname}/../../database.json`);
-const dbconfig = dbconfigfile.dev;
+let dbconfig;
+
+if(process.env.NODE_ENV === "test") {
+    dbconfig = dbconfigfile.test;
+}else{
+    dbconfig = dbconfigfile.dev;
+}
 
 console.info('nodeENV', process.env.NODE_ENV);
 

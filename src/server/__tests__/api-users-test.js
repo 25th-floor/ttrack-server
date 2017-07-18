@@ -5,7 +5,7 @@ import { getDatabasePool, createUser } from '../../common/testUtils';
 
 const expect = chakram.expect;
 
-const API_URI_USERS = "http://0.0.0.0:8080/api/users";
+const API_URI_USERS = "http://localhost:8081/api/users";
 
 const pool = getDatabasePool();
 const userFixture = {
@@ -18,7 +18,7 @@ describe("ttrack API /api/users", function () {
     let client;
     let user;
 
-    describe.only("testing GET request", () => {
+    describe("testing GET request", () => {
         beforeAll(async (done) => {
             client = await pool.connect();
             user = await createUser(client, userFixture);
