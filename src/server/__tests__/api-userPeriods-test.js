@@ -5,7 +5,7 @@ import { getDatabasePool, createUser, PERIOD_TYPE_IDS, createPeriodStubWithDayFo
 
 const expect = chakram.expect;
 
-const API_URI_USER_PERIODS = 'http://localhost:8090/api/users/$user/periods';
+const API_URI_USER_PERIODS = 'http://localhost:8080/api/users/$user/periods';
 
 const pool = getDatabasePool();
 const userFixture = {

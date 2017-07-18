@@ -5,7 +5,7 @@ import { getDatabasePool, createUser } from '../../common/testUtils';
 
 const expect = chakram.expect;
 
-const API_URI_USERS = "http://localhost:8090/api/users";
+const API_URI_USERS = "http://localhost:8080/api/users";
 
 const pool = getDatabasePool();
 const userFixture = {

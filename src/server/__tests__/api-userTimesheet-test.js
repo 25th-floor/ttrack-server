@@ -5,7 +5,7 @@ import { getDatabasePool, createUserWithTargetTime } from '../../common/testUtil
 
 const expect = chakram.expect;
 
-const API_URI_USER_TIMESHEET = 'http://localhost:8090/api/users/$user/timesheet/$from/$to';
+const API_URI_USER_TIMESHEET = 'http://localhost:8080/api/users/$user/timesheet/$from/$to';
 
 const pool = getDatabasePool();
 const userFixture = {

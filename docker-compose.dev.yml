@@ -1,0 +1,42 @@
+version: '2.1'
+services:
+  postgres:
+    image: postgres:9.5
+    container_name: ${COMPOSE_STACK_NAME}-postgres
+    volumes:
+      - ${PWD}/docker/initdb.d:/docker-entrypoint-initdb.d
+    environment:
+      - POSTGRES_DB=ttrack
+      - POSTGRES_PASSWORD=postgres
+      - DB_USER=ttrack
+      - DB_DATABASE=ttrack
+      - DB_PASSWORD=postgres
+      - NODE_ENV=development
+    ports:
+      - 5432:5432
+  ttrack:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.ttrack
+      args:
+        - AS_USER=${AS_USER:-root}
+        - AS_GID=${AS_GID:-0}
+        - AS_UID=${AS_UID:-0}
+    image: ttrack-backend:latest
+    container_name: ${COMPOSE_STACK_NAME}
+    ports:
+      - 8080:8080
+    volumes:
+      - ${PWD}:/usr/src/src
+    working_dir: /usr/src/src
+    environment:
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_DATABASE=ttrack
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DRIVER=pg
+      - DB_SCHEMA=public
+      - NODE_ENV=development
+    depends_on:
+      - postgres
