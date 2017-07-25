@@ -119,7 +119,7 @@ module.exports = {
             .then((result) => preparePeriodForApiResponse(result.rows[0]));
     },
     //TODO uniq parameter wording 
-    delete(userId, per_id) {
+    delete(per_id, userId) {
         const sql = 'DELETE FROM periods WHERE per_id = (SELECT per_id FROM periods INNER JOIN days ON (day_id = per_day_id) WHERE per_id = $1 AND day_usr_id = $2)';
         return query(sql, [per_id, userId])
             .then(

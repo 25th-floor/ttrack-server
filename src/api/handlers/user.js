@@ -115,7 +115,7 @@ module.exports.deletePeriod = {
         const { userId, per_id } = request.params;
         console.info(` API PUT DELETE for Period ${per_id} for user ${userId}`);
         return Period
-            .delete(userId, per_id)
+            .delete(per_id, userId)
             .then(
                 () => reply(),
                 error => console.error(error)

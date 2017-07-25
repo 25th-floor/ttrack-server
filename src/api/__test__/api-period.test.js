@@ -3,14 +3,11 @@ import path from 'path';
 import R from 'ramda';
 import { query } from '../../pg';
 import manifest from '../../config/manifest'; 
-import Joi from 'joi';
 import { PERIOD_TYPE_IDS, createPeriodStubWithDayForUserAndDate } from '../../common/testUtils';
 
 const relativeTo = path.join(__dirname, '../../');
 
 const dummyUserSql = 'INSERT INTO users (usr_firstname , usr_lastname, usr_email, usr_employment_start) VALUES ( $1, $2, $3, $4) RETURNING *';
-const targetTimeSql = 'INSERT INTO user_target_times (utt_usr_id , utt_start, utt_end, utt_target_time) VALUES ( $1, $2, $3, $4 ) RETURNING *';
-
 
 const apiCreatePath = (user) => `/api/users/${user}/periods/`;
 const apiPutAndDeletePath = (user,per_id) => `/api/users/${user}/periods/${per_id}`;
@@ -254,8 +251,6 @@ describe('API',() => {
         describe("testing udpate(PUT)", () => {
             let period;
             const date = '2001-03-01';
-            let updateUri;
-            let target;
 
             beforeAll(async (done) => {
                 period = await createPeriodStubWithDayForUserAndDate(user.usr_id, date);
@@ -318,9 +313,6 @@ describe('API',() => {
             });
 
             it("should work on success", async () => {
-                const payload = {
-                    per_id: period.per_id,
-                };
                 const response  = await Server.inject({ 
                     method: 'PUT',
                     payload: {

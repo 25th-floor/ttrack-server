@@ -16,11 +16,6 @@ function hasKeyPrefix(prefix) {
     return (value, key) => _.startsWith(key, prefix);
 }
 
-const log = (res) => {
-    console.log(res);
-    return res;
-};
-
 /**
  * fetches all days from a period and joins the user periods data to it if present
  *
@@ -189,7 +184,7 @@ function createMissingHolidays(dateRange, user, start, existingHolidays, holiday
         });
     }));
 
-    return Q.all(newPeriodPromises).then(log);
+    return Q.all(newPeriodPromises);
 }
 
 function getTimesheetForTimeRange(user, dateRange) {
