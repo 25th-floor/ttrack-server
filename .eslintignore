@@ -1,6 +1,4 @@
-# IntelliJ Override
-*.js
-!src/**/*
-
 # Ignore test files
-**/__*/**
+**/node_modules/
+coverage/*
+migrations
