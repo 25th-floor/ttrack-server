@@ -67,6 +67,7 @@
   },
   "dependencies": {
     "body-parser": "^1.15.2",
+    "cors": "^2.8.4",
     "db-migrate": "^0.10.0-beta.20",
     "db-migrate-pg": "^0.2.4",
     "express": "4.15.3",

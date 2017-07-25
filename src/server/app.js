@@ -2,10 +2,12 @@
 import express from 'express';
 import pg from 'pg';
 import raven from 'raven';
+import cors from 'cors';
 
 import resources from './resources';
 
 const app = express();
+app.use(cors());
 
 const dbconfigfile = require(`${__dirname}/../../database.json`);
 const dbconfig = dbconfigfile.dev;
