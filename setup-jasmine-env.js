@@ -8,6 +8,7 @@ jasmine.VERBOSE = false;
 
 require('jasmine-expect');
 require('jasmine-expect-moment');
+
 var reporters = require('jasmine-reporters');
 
 var reporter = new reporters.JUnitXmlReporter({

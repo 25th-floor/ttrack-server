@@ -2,10 +2,10 @@
  * Test Utilities and Helpers for API Tests
  */
 
-import pg from 'pg';
+// import pg from 'pg';
 import { keys, values, range } from 'ramda';
 
-import dbConfigFile from './../../database.json';
+//import dbConfigFile from './../../database.json';
 
 // Constants
 
@@ -13,9 +13,9 @@ export const PERIOD_TYPE_IDS = ['Balance', 'Comment', 'Holiday', 'Nursing', 'Sic
 
 // Database Helper
 
-export function getDatabasePool() {
+/* export function getDatabasePool() {
     return new pg.Pool(dbConfigFile.test);
-}
+} */
 
 // create Entities in the Database
 
