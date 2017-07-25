@@ -6,3 +6,4 @@ log
 coverage
 yarn-error.log
 database.json
+buildinfo.json

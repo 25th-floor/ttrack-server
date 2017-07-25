@@ -30,25 +30,24 @@ RUN [ ${AS_UID} -gt 500 -a $(getent passwd ${AS_UID}) ] && \
 USER ${AS_USER}
 WORKDIR ${APPDIR}
 
-# npm related
+# install dependencies
 COPY package.json ${APPDIR}
 COPY yarn.lock ${APPDIR}
-# SERVER START 
-# COPY nodemon.json ${APPDIR}
+RUN yarn install
+
 # Linting
 COPY .eslintrc ${APPDIR}
 COPY .eslintignore ${APPDIR}
+
 # javascript ES2017 syntax for testing
 COPY .babelrc ${APPDIR}
+
 # TEST runner setup
 # COPY setup-jasmine-env.js ${APPDIR}
 
 # Entrypoint related
 COPY docker/entrypoint.sh /entrypoint.sh
 COPY docker/entrypoint.d /entrypoint.d
-
-# install dependencies
-RUN yarn install
 
 # Applicatin sources
 COPY / ${APPDIR} 
