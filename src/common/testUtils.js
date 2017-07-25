@@ -14,7 +14,6 @@ export const PERIOD_TYPE_IDS = ['Balance', 'Comment', 'Holiday', 'Nursing', 'Sic
 // Database Helper
 
 export function getDatabasePool() {
-    console.log(dbConfigFile.test);
     return new pg.Pool(dbConfigFile.test);
 }
 
