@@ -53,7 +53,7 @@ const manifest = {
                         //connectionString: process.env.DATABASE_URL
                         "user": "postgres", 
                         "password": "postgres", 
-                        "database": "ttrack", 
+                        "database": "ttrack_test", 
                         "port": "5432", 
                         "host": "postgres",
                         "driver": "pg", 

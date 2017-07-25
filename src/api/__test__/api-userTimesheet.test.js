@@ -9,7 +9,7 @@ const relativeTo = path.join(__dirname, '../../');
 const dummyUserSql = 'INSERT INTO users (usr_firstname , usr_lastname, usr_email, usr_employment_start) VALUES ( $1, $2, $3, $4) RETURNING *';
 //const targetTimeSql = 'INSERT INTO user_target_times (utt_usr_id , utt_start, utt_end, utt_target_time) VALUES ( $1, $2, $3, $4 ) RETURNING *';
 
-const apiPath = (user, from, to) => `api/users/${user}/timesheet/${from}/${to}`;
+const apiPath = (user, from, to) => `/api/users/${user}/timesheet/${from}/${to}`;
 
 describe('API',() => {
     let Server;
@@ -27,6 +27,7 @@ describe('API',() => {
     });
 
     afterAll(async (done) => {
+        console.log('STOP SERVER');
         await Server.stop();
         done();
     });
@@ -47,12 +48,29 @@ describe('API',() => {
             done();
         });
 
-        //TODO BROKEN TEST
-        // is not implmented jet work in progress
         describe(' GET ', ()=>{
             it('statusCode', async () => {
                 const response  = await Server.inject({ method: 'GET', url: apiPath(user.usr_id, '2001-02-01',  '2001-03-01') });
-                expect(response.statusCode).toBe(400);
+                expect(response.statusCode).toBe(200);
+            });
+        });
+
+        describe('Test Method not implemented', ()=>{
+            it('POST', async ()=>{
+                const response  = await Server.inject({ method: 'POST' , url: apiPath(user.usr_id, '2001-02-01',  '2001-03-01') });
+                expect(response.statusCode).toBe(405);
+            });
+            it('DELETE', async ()=>{
+                const response  = await Server.inject({ method: 'DELETE' , url: apiPath(user.usr_id, '2001-02-01',  '2001-03-01') });
+                expect(response.statusCode).toBe(405);
+            });
+            it('PUT', async ()=>{
+                const response  = await Server.inject({ method: 'PUT' , url: apiPath(user.usr_id, '2001-02-01',  '2001-03-01') });
+                expect(response.statusCode).toBe(405);
+            });
+            it('PATCH', async ()=>{
+                const response  = await Server.inject({ method: 'PATCH' , url: apiPath(user.usr_id, '2001-02-01',  '2001-03-01') });
+                expect(response.statusCode).toBe(405);
             });
         });
     });

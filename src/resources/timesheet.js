@@ -194,7 +194,6 @@ function createMissingHolidays(dateRange, user, start, existingHolidays, holiday
 
 function getTimesheetForTimeRange(user, dateRange) {
     const userId = user.usr_id;
-    console.log(user);
     // don't start with range start, but 1 day before for carry data calculation
     const carryStart = moment(dateRange.start);
     carryStart.subtract(1, 'days');

@@ -8,6 +8,11 @@ let pool;
 //let counter = 0;
 
 function initializeConnection(server, next){
+    if(process.env.DATABASE_URL){
+        config = {
+            connectionString: process.env.DATABASE_URL
+        };
+    }
     pool = new Pool(config);
     pool.on('error', (err, client) => {
         console.error('Unexpected error on idle client', client, err);
