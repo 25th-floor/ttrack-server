@@ -33,11 +33,15 @@ WORKDIR ${APPDIR}
 # npm related
 COPY package.json ${APPDIR}
 COPY yarn.lock ${APPDIR}
+# SERVER START 
+# COPY nodemon.json ${APPDIR}
 # Linting
-COPY .eslintrc.js ${APPDIR}
+COPY .eslintrc ${APPDIR}
 COPY .eslintignore ${APPDIR}
-# javascript ES2017 syntax
+# javascript ES2017 syntax for testing
 COPY .babelrc ${APPDIR}
+# TEST runner setup
+# COPY setup-jasmine-env.js ${APPDIR}
 
 # Entrypoint related
 COPY docker/entrypoint.sh /entrypoint.sh
@@ -47,7 +51,7 @@ COPY docker/entrypoint.d /entrypoint.d
 RUN yarn install
 
 # Applicatin sources
-COPY / ${APPDIR}
+COPY / ${APPDIR} 
 
 ENTRYPOINT ["/usr/src/app/docker/entrypoint.sh"]
 # CMD ["npm", "start"]

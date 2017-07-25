@@ -1,0 +1,10 @@
+{
+  "events": {
+    "restart": "npm run lint"
+  },
+  "watch": [
+    "src/api",
+    "src/common",
+    "src/resources"
+  ]
+}
