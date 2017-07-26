@@ -5,7 +5,7 @@ module.exports.list = {
     handler: function (request, reply) {
         return Period.list()
             .then(
-                success => reply(success),
+                success => reply(success.rows),
                 error
             );
     }
