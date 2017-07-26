@@ -18,7 +18,7 @@ module.exports.create = {
             per_stop: Joi.string(),
             per_break: Joi.string(),
             per_comment: Joi.string(),
-        }),
+        }).options({ allowUnknown: true }),
         params:{
             userId: Joi.number().required(),
         }
@@ -29,7 +29,7 @@ module.exports.create = {
         console.info('API POST Request for Period for user', userId);
         return Period
             .post(userId, { ...data, userId })
-            .then(period => reply(period));
+            .then(period => reply(period).code(201));
     }
 };
 
@@ -42,7 +42,7 @@ module.exports.update = {
             per_stop: Joi.string(),
             per_break: Joi.string(),
             per_comment: Joi.string(),
-        }),
+        }).options({ allowUnknown: true }),
         params:{
             userId:  Joi.number().integer().required(),
             per_id:  Joi.number().integer().required(),
@@ -54,7 +54,7 @@ module.exports.update = {
         console.info(` API PUT Request for Period ${per_id} for user ${userId}`);
         return Period
             .put(userId, { ...data, userId, per_id })
-            .then(period => reply(period).code(201));
+            .then(period => reply(period));
     }
 };
 
@@ -71,7 +71,7 @@ module.exports.delete = {
         return Period
             .delete(per_id, userId)
             .then(
-                () => reply(),
+                () => reply().code(204),
                 error => console.error(error)
             );
     }

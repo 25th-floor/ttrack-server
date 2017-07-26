@@ -12,7 +12,7 @@ const dummyUserSql = 'INSERT INTO users (usr_firstname , usr_lastname, usr_email
 const apiCreatePath = (user) => `/api/users/${user}/periods/`;
 const apiPutAndDeletePath = (user,per_id) => `/api/users/${user}/periods/${per_id}`;
 
-describe('API',() => {
+describe('ttrack API',() => {
     let Server;
     beforeAll(async (done) => {
         Glue.compose(manifest, { relativeTo }, (err, server) => {
@@ -33,7 +33,7 @@ describe('API',() => {
         done();
     });
 
-    describe('ttrack API /api/users/{id}/periods', async ()=>{
+    describe('Periods /api/users/{id}/periods', async ()=>{
 
         let user;
         beforeAll(async (done) => {
@@ -44,10 +44,6 @@ describe('API',() => {
         });
 
         afterAll(async (done) => {
-            // TODO 
-            // ERROR:  update or delete on table "users" violates foreign key constraint "days_day_usr_id_fkey" on table "days"
-            // DETAIL:  Key (usr_id)=(571) is still referenced from table "days".
-            // STATEMENT:  DELETE FROM users WHERE usr_id = 571
             await query(`DELETE FROM days WHERE day_usr_id = ${user.usr_id}`);
             await query(`DELETE FROM users WHERE usr_id = ${user.usr_id}`);
             done();
@@ -109,7 +105,7 @@ describe('API',() => {
                     url: apiCreatePath(user.usr_id)
                 });
 
-                expect(response.statusCode).toBe(200);
+                expect(response.statusCode).toBe(201);
                 expect(response.result).toMatchObject({
                     "per_break": null,
                     "per_comment": null,
@@ -135,7 +131,7 @@ describe('API',() => {
                     url: apiCreatePath(user.usr_id)
                 });
 
-                expect(response.statusCode).toBe(200);
+                expect(response.statusCode).toBe(201);
                 expect(response.result).toMatchObject({
                     "per_break": null,
                     "per_comment": null,
@@ -165,7 +161,7 @@ describe('API',() => {
                     url: apiCreatePath(user.usr_id)
                 });
 
-                expect(response.statusCode).toBe(200);
+                expect(response.statusCode).toBe(201);
                 expect(response.result).toMatchObject({
                     "per_break": {
                         "minutes": 30
@@ -198,7 +194,7 @@ describe('API',() => {
                     url: apiCreatePath(user.usr_id)
                 });
 
-                expect(response.statusCode).toBe(200);
+                expect(response.statusCode).toBe(201);
                 expect(response.result).toMatchObject({
                     "per_break": {
                         "minutes": 30
@@ -232,7 +228,7 @@ describe('API',() => {
                         payload,
                         url: apiCreatePath(user.usr_id)
                     });
-                    // expect(response.statusCode).toBe(400);
+                    expect(response.statusCode).toBe(201);
                     expect(response.result).toMatchObject({
                         per_pty_id: type,
                         per_start: {
@@ -322,7 +318,7 @@ describe('API',() => {
                     },
                     url: apiPutAndDeletePath(user.usr_id, period.per_id)
                 });
-                expect(response.statusCode).toBe(201);
+                expect(response.statusCode).toBe(200);
                 expect(response.result).toMatchObject({
                     "per_break": null,
                     "per_comment": null,
@@ -337,7 +333,7 @@ describe('API',() => {
             });
 
             // per_day_id is not allowd ?? 
-            it.skip("day id should not be changed", async () => {
+            it("day id should not be changed", async () => {
                 const payload = {
                     date,
                     per_pty_id: 'Work',
@@ -349,7 +345,7 @@ describe('API',() => {
                     payload,
                     url: apiPutAndDeletePath(user.usr_id, period.per_id)
                 });
-                expect(response.statusCode).toBe(400);
+                expect(response.statusCode).toBe(200);
                 expect(response.result).toMatchObject({
                     "per_break": null,
                     "per_comment": null,
@@ -402,7 +398,7 @@ describe('API',() => {
                     payload: {},
                     url: apiPutAndDeletePath(user.usr_id, period.per_id)
                 });
-                expect(response.statusCode).toBe(200);
+                expect(response.statusCode).toBe(204);
                 const result = await query(`SELECT * from periods WHERE per_id = ${period.per_id}`);
                 expect(result.rows.length).toBe(0);
             });
@@ -413,8 +409,7 @@ describe('API',() => {
                     payload: {},
                     url: apiPutAndDeletePath(user.usr_id, period.per_id+10000)
                 });
-                //TODO ? 204 ?
-                expect(response.statusCode).toBe(200);
+                expect(response.statusCode).toBe(204);
             });
         });
     });

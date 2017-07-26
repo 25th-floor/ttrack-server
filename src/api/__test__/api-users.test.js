@@ -29,7 +29,7 @@ describe('ttrack API', () => {
         done();
     });
 
-    describe("Users", async () => {
+    describe("Users /api/users", async () => {
         let user;
         beforeAll(async (done) => {
             user = await query(dummyUserSql, ['Mister', 'Smith', 'mister@smith.com']);
