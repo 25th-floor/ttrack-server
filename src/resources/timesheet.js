@@ -1,8 +1,6 @@
 const _ = require('lodash')
     , moment = require('moment')
-    , sqlFormatter = require("sql-formatter")
     , Q = require('q')
-    , db = require('../db')
     , util = require('../common/util')
     , period = require('./period')
     , User = require('./user')
