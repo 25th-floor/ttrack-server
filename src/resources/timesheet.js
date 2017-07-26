@@ -1,12 +1,12 @@
-const _ = require('lodash');
-const moment = require('moment');
-
-const Q = require('q');
-const db = require('../db');
-const util = require('../common/util');
-const period = require('./period');
-const User = require('./user');
-const { query } = require('../pg');
+const _ = require('lodash')
+    , moment = require('moment')
+    , sqlFormatter = require("sql-formatter")
+    , Q = require('q')
+    , db = require('../db')
+    , util = require('../common/util')
+    , period = require('./period')
+    , User = require('./user')
+    , { query } = require('../pg');
 
 function fmtDayDate(row) {
     return moment(row.day_date).format('YYYY-MM-DD');
@@ -118,37 +118,43 @@ function calculateCarryData(user, until) {
 }
 
 function fetchHolidays(userId, dateRange) {
-    const holidayQuery = db.days
-        .select(db.days.star(), db.periods.star())
-        .from(db.days
-            .join(db.periods)
-            .on(db.periods.per_day_id.equals(db.days.day_id))
-            .join(db.periodTypes)
-            .on(db.periods.per_pty_id.equals(db.periodTypes.pty_id))
-            .join(db.users)
-            .on(db.days.day_usr_id.equals(db.users.usr_id)))
-        .where(db.users.usr_id.equals(userId))
-        .and(db.periodTypes.pty_name.equals('Feiertag'))
-        .and(db.days.day_date.between(dateRange.start, dateRange.end))
-        .toQuery();
-    return query(holidayQuery).then(_.property('rows'));
+    const holidayQuery = `
+    SELECT
+        "days".*,
+        "periods".*
+    FROM
+        "days"
+    INNER JOIN "periods" ON ("periods"."per_day_id" = "days"."day_id")
+    INNER JOIN "period_types" ON ("periods"."per_pty_id" = "period_types"."pty_id")
+    INNER JOIN "users" ON ("days"."day_usr_id" = "users"."usr_id")
+    WHERE
+    (
+        (
+            ("users"."usr_id" = $1)
+            AND ("period_types"."pty_name" = $2)
+        )
+        AND (
+            "days"."day_date" BETWEEN $3 AND $4
+        )
+    )`;
+    return query(holidayQuery,[userId, 'Feiertag', dateRange.start, dateRange.end ]).then(_.property('rows'));
 }
 
 function fetchHolidayPeriodTypeId() {
-    const periodTypeQuery = db.periodTypes
-        .select(db.periodTypes.pty_id)
-        .from(db.periodTypes)
-        .where(db.periodTypes.pty_name.equals('Feiertag'))
-        .toQuery();
-    return query(periodTypeQuery)
+    const periodTypeQuery = `
+        SELECT
+            "period_types"."pty_id"
+        FROM
+            "period_types"
+        WHERE
+            ("period_types"."pty_name" = $1)
+    `;
+    return query(periodTypeQuery, ['Feiertag'])
         .then(result => result.rows[0].pty_id);
 }
 
 function fetchPeriodTypes() {
-    const periodTypeQuery = db.periodTypes
-        .select(db.periodTypes.star())
-        .from(db.periodTypes)
-        .toQuery();
+    const periodTypeQuery = 'SELECT * FROM period_types';
     return query(periodTypeQuery)
         .then(_.property('rows'));
 }

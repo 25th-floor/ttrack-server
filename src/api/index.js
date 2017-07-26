@@ -1,5 +1,6 @@
 const Home = require('./handlers/home')
-    , User = require('./handlers/user');
+    , User = require('./handlers/user')
+    , PeriodTypes = require('./handlers/periodTypes');
 
 exports.register = (plugin, options, next) => {
     plugin.route([
@@ -11,6 +12,8 @@ exports.register = (plugin, options, next) => {
         { method: 'POST', path: '/users/{userId}/periods', config: User.createPeriod },
         { method: 'PUT' , path: '/users/{userId}/periods/{per_id}', config: User.updatePeriod },
         { method: 'DELETE' , path: '/users/{userId}/periods/{per_id}', config: User.deletePeriod },
+        { method: 'GET' , path: '/period-types', config: PeriodTypes.list },
+        
     ]);
     next();
 };

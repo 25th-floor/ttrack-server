@@ -78,14 +78,36 @@ module.exports = {
                         data.per_stop = data.per_stop ? convertToTime(data.per_stop) : null;
                         data.per_start = convertToTime(data.per_start);
                         data.per_break = convertToTime(data.per_break);
-                        return query(
-                            'INSERT INTO periods (per_start, per_stop, per_break, per_comment, per_day_id, per_pty_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-                            [data.per_start, data.per_stop, data.per_break, data.per_comment, dayId, data.per_pty_id]);
+
+                        return query(`
+                            INSERT INTO
+                                periods (
+                                    per_start,
+                                    per_stop,
+                                    per_break,
+                                    per_comment,
+                                    per_day_id,
+                                    per_pty_id
+                                )
+                            VALUES
+                                ($1, $2, $3, $4, $5, $6) RETURNING *
+                        `,
+                            [ data.per_start, data.per_stop, data.per_break, data.per_comment, dayId, data.per_pty_id ]
+                        );
                     }
 
                     data.per_duration = convertToTime(data.per_duration);
-                    return query(
-                        'INSERT INTO periods (per_duration, per_comment, per_day_id, per_pty_id) VALUES ($1, $2, $3, $4) RETURNING *',
+                    return query(`
+                        INSERT INTO
+                            periods (
+                                per_duration,
+                                per_comment,
+                                per_day_id,
+                                per_pty_id
+                            )
+                        VALUES
+                            ($1, $2, $3, $4) RETURNING *
+                        `,
                         [data.per_duration, data.per_comment, dayId, data.per_pty_id]);
                 })
                     .then((result) => preparePeriodForApiResponse(result.rows[0])) ;
@@ -106,21 +128,57 @@ module.exports = {
                     data.per_stop = data.per_stop ? convertToTime(data.per_stop) : null;
                     data.per_start = convertToTime(data.per_start);
                     data.per_break = convertToTime(data.per_break);
-                    return query(
-                        'UPDATE periods SET per_start = $1, per_stop = $2, per_break = $3, per_duration = NULL, per_comment = $4, per_pty_id = $5 WHERE per_id = $6 RETURNING *',
+                    return query(`
+                        UPDATE
+                            periods
+                        SET
+                            per_start = $1,
+                            per_stop = $2,
+                            per_break = $3,
+                            per_duration = NULL,
+                            per_comment = $4,
+                            per_pty_id = $5
+                        WHERE
+                            per_id = $6 RETURNING *
+                    `,
                         [data.per_start, data.per_stop, data.per_break, data.per_comment, data.per_pty_id, data.per_id]);
                 }
 
                 data.per_duration = convertToTime(data.per_duration);
-                return query(
-                    'UPDATE periods SET per_duration = $1, per_comment = $2, per_pty_id = $3, per_start = NULL, per_stop = NULL, per_break = NULL WHERE per_id = $4 RETURNING *',
+                return query(`
+                    UPDATE
+                        periods
+                    SET
+                        per_duration = $1,
+                        per_comment = $2,
+                        per_pty_id = $3,
+                        per_start = NULL,
+                        per_stop = NULL,
+                        per_break = NULL
+                    WHERE
+                        per_id = $4 RETURNING *
+                `,
                     [data.per_duration, data.per_comment, data.per_pty_id, data.per_id]);
             })
             .then((result) => preparePeriodForApiResponse(result.rows[0]));
     },
     //TODO uniq parameter wording 
     delete(per_id, userId) {
-        const sql = 'DELETE FROM periods WHERE per_id = (SELECT per_id FROM periods INNER JOIN days ON (day_id = per_day_id) WHERE per_id = $1 AND day_usr_id = $2)';
+        const sql = `
+            DELETE FROM
+                periods
+            WHERE
+                per_id = (
+                    SELECT
+                        per_id
+                    FROM
+                        periods
+                        INNER JOIN days ON (day_id = per_day_id)
+                    WHERE
+                        per_id = $1
+                        AND day_usr_id = $2
+                )
+        `;
         return query(sql, [per_id, userId])
             .then(
                 result => result,
