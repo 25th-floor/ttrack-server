@@ -11,7 +11,7 @@ const dummyUserSql = 'INSERT INTO users (usr_firstname , usr_lastname, usr_email
 
 const apiPath = (user, from, to) => `/api/users/${user}/timesheet/${from}/${to}`;
 
-describe('API',() => {
+describe.skip('API',() => {
     let Server;
     beforeAll(async (done) => {
         Glue.compose(manifest, { relativeTo }, (err, server) => {

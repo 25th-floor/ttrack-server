@@ -360,22 +360,54 @@ describe('ttrack API',() => {
                 });
             });
 
-            //TODO return nothing ? 
-            it.skip("should fail if period id is wrong", async () => {
+            it("should fail if period id is wrong", async () => {
                 const payload = {
                     date,
                     per_pty_id: 'Work',
                     per_start: "PT8H",
                 };
-                const response  = await Server.inject({ 
+                const wrongId = period.per_id+100000;
+                const response  = await Server.inject({
                     method: 'PUT',
                     payload,
-                    url: apiPutAndDeletePath(user.usr_id, period.per_id+100000)//?
+                    url: apiPutAndDeletePath(user.usr_id, wrongId)//?
                 });
-                expect(response.statusCode).toBe(400);
-                expect(response.result).toMatchObject();
+                expect(response.statusCode).toBe(404);
+                expect(response.result.message).toBe(`Could not find period with id '${wrongId}'`);
             });
 
+            describe("with another user", () => {
+                let anotherUser;
+                let anotherPeriod;
+
+                beforeAll(async (done) => {
+                    const result = await query(dummyUserSql,['Mister', 'Anderson', 'mister@anderson.com','2001-01-01']);
+                    anotherUser = R.head(result.rows);
+                    anotherPeriod = await createPeriodStubWithDayForUserAndDate(anotherUser.usr_id, date);
+                    done();
+                });
+
+                afterAll(async (done) => {
+                    await query(`DELETE FROM days WHERE day_usr_id = ${anotherUser.usr_id}`);
+                    await query(`DELETE FROM users WHERE usr_id = ${anotherUser.usr_id}`);
+                    done();
+                });
+
+                it("should fail if period belongs to other user", async () => {
+                    const payload = {
+                        date,
+                        per_pty_id: 'Work',
+                        per_start: "PT8H",
+                    };
+                    const response  = await Server.inject({
+                        method: 'PUT',
+                        payload,
+                        url: apiPutAndDeletePath(user.usr_id, anotherPeriod.per_id)//?
+                    });
+                    expect(response.statusCode).toBe(404);
+                    expect(response.result.message).toBe(`Could not find period with id '${anotherPeriod.per_id}'`);
+                });
+            });
         });
 
         describe("testing delete (DELETE)", () => {
