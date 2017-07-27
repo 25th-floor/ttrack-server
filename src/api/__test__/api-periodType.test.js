@@ -1,7 +1,8 @@
 import Glue from 'glue'; 
 import path from 'path';
+import R from 'ramda';
+
 import manifest from '../../config/manifest';
-import { PERIOD_TYPE_IDS } from '../../common/testUtils';
 
 const relativeTo = path.join(__dirname, '../../');
 
@@ -53,38 +54,45 @@ describe('ttrack API',() => {
                 expect(response.statusCode).toBe(200);
             });
 
-            describe("success should return all ids", () => {
-                const expectedIds = PERIOD_TYPE_IDS;
-
-                for (let i in expectedIds) {
-                    let id = expectedIds[i];
-                    it(`and include period type id ${id}`, async () => {
-                        const response  = await Server.inject({ method: 'GET', payload:{} , url: '/api/period-types' });
-                        expect(response.statusCode).toBe(200);
-                        const ids = response.result.map(t => t.pty_id);
-                        expect(ids.indexOf(id)).not.toBe(-1);
-                    });
-                }
-            });
-
-            describe("success should return all names", () => {
-                const expectedNames = [
-                    'Arbeitszeit',
-                    'Ausgleich',
-                    'Feiertag',
-                    'Kommentar',
-                    'Krankenstand',
-                    'Pflegeurlaub',
-                    'Urlaub',
+            describe("success should return all types", () => {
+                const types = [
+                    {
+                        pty_id: "Work",
+                        pty_name: "Arbeitszeit",
+                    },
+                    {
+                        pty_id: "Vacation",
+                        pty_name: "Urlaub",
+                    },
+                    {
+                        pty_id: "Sick",
+                        pty_name: "Krankenstand",
+                    },
+                    {
+                        pty_id: "Nursing",
+                        pty_name: "Pflegeurlaub",
+                    },
+                    {
+                        pty_id: "Holiday",
+                        pty_name: "Feiertag",
+                    },
+                    {
+                        pty_id: "Comment",
+                        pty_name: "Kommentar",
+                    },
+                    {
+                        pty_id: "Balance",
+                        pty_name: "Ausgleich",
+                    },
                 ];
 
-                for (let i in expectedNames) {
-                    let name = expectedNames[i];
-                    it(`and include period type id ${name}`, async () => {
+                for (let i in types) {
+                    let name = types[i].pty_name;
+                    it(`and include period type ${name}`, async () => {
                         const response  = await Server.inject({ method: 'GET', payload:{} , url: '/api/period-types' });
                         expect(response.statusCode).toBe(200);
-                        const names = response.result.map(t => t.pty_name);
-                        expect(names.indexOf(name)).not.toBe(-1);
+                        const result = R.head(response.result.filter(t => t.pty_id === types[i].pty_id));
+                        expect(result).toMatchObject(types[i]);
                     });
                 }
             });
