@@ -7,8 +7,6 @@ const BaseJoi = require('joi')
 
 const Joi = BaseJoi.extend(Extension);
 
-const error = (error) => console.log('error', error);
-
 module.exports.create = {
     id: 'createPeriod',
     validate: {

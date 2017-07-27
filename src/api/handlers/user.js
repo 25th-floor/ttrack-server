@@ -5,7 +5,7 @@ const BaseJoi = require('joi')
 
 const Joi = BaseJoi.extend(Extension);
 
-const error = (error) => console.log('error', error);
+const error = error => console.error(error);
 
 module.exports.list = {
     handler: function (request, reply) {
