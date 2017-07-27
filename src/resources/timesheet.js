@@ -69,6 +69,7 @@ function fetchPeriodsGroupedByDay(userId, dateRange, periodTypes) {
 
                 return Object.assign({}, day,
                     {
+                        "day_date": day.day_date.toISOString(),
                         periods: p,
                         // calculate remaining target time after reducing holidays and all other non Work durations
                         // todo: maybe this should be done in the database
@@ -77,7 +78,7 @@ function fetchPeriodsGroupedByDay(userId, dateRange, periodTypes) {
                 );
             });
             return {
-                days: _.sortBy(_.values(data), day => moment(day.day_date)),
+                days: _.sortBy(_.values(data), day => moment(day.day_date)), // todo should not the database do this?
             };
         });
 }
@@ -105,10 +106,11 @@ function calculateCarryData(user, until) {
             }
 
             const data = result.rows[0];
+            // carryFrom/To are type Date
             if (data.uw_carry_time !== null) {
                 carryData.carryTime = data.uw_carry_time;
-                carryData.carryFrom = data.uw_date_from;
-                carryData.carryTo = data.uw_due_date;
+                carryData.carryFrom = data.uw_date_from.toISOString();
+                carryData.carryTo = data.uw_due_date.toISOString();
             }
 
             return carryData;
