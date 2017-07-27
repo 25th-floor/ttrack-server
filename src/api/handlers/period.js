@@ -1,6 +1,8 @@
 // const User = require('../../resources/user');
 const BaseJoi = require('joi')
     , Extension = require('joi-date-extensions')
+    , R = require('ramda')
+    , Boom = require('boom')
     , Period = require('../../resources/period');
 
 const Joi = BaseJoi.extend(Extension);
@@ -48,10 +50,17 @@ module.exports.update = {
             per_id:  Joi.number().integer().required(),
         }
     },
-    handler: function (request, reply){
+    handler: async function (request, reply){
         const data = request.payload;
         const { userId, per_id } = request.params;
         console.info(` API PUT Request for Period ${per_id} for user ${userId}`);
+
+        // validate if user has this period
+        const period = await Period.get(per_id, userId);
+        if (!period || R.isEmpty(period)) {
+            return reply(Boom.create(404, `Could not find period with id '${per_id}'`));
+        }
+
         return Period
             .put(userId, { ...data, userId, per_id })
             .then(period => reply(period));

@@ -22,7 +22,7 @@ function fetchDayIdForUser(date, user, target) {
             }
 
             const queryString = 'INSERT INTO days VALUES (default, $1, $2, $3) RETURNING day_id';
-            return query( queryString, [date, user.usr_id, target])
+            return query(queryString, [date, user.usr_id, target])
                 .then(res => res.rows[0].day_id);
         });
 }
@@ -58,6 +58,18 @@ function preparePeriodForApiResponse(periodData) {
 }
 
 module.exports = {
+    get(id, userId) {
+        return query(`
+            SELECT periods.*
+            FROM periods
+            JOIN days ON (per_day_id = day_id)
+            WHERE per_id = $1
+             AND day_usr_id = $2
+        `,
+            [id, userId]
+        )
+            .then((result) => preparePeriodForApiResponse(result.rows[0]));
+    },
     post(userId, postData) {
         const userPromise = User.get(userId);
         const targetPromise = User.getTargetTime(userId, postData.date);
@@ -92,7 +104,7 @@ module.exports = {
                             VALUES
                                 ($1, $2, $3, $4, $5, $6) RETURNING *
                         `,
-                            [ data.per_start, data.per_stop, data.per_break, data.per_comment, dayId, data.per_pty_id ]
+                            [data.per_start, data.per_stop, data.per_break, data.per_comment, dayId, data.per_pty_id]
                         );
                     }
 
@@ -110,7 +122,7 @@ module.exports = {
                         `,
                         [data.per_duration, data.per_comment, dayId, data.per_pty_id]);
                 })
-                    .then((result) => preparePeriodForApiResponse(result.rows[0])) ;
+                    .then((result) => preparePeriodForApiResponse(result.rows[0]));
 
             });
     },
