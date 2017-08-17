@@ -14,12 +14,12 @@ services:
   ttrack-server:
     build:
       context: .
-      dockerfile: docker/Dockerfile.ttrack
+      dockerfile: Dockerfile
       args:
         - AS_USER=${AS_USER:-root}
         - AS_GID=${AS_GID:-0}
         - AS_UID=${AS_UID:-0}
-    image: ttrack-backend:latest
+    image: ttrack-server:latest
     container_name: ttrack-server
     ports:
       - 8000:8000

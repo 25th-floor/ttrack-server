@@ -13,21 +13,21 @@ RUN apt-get update \
 	&& apt-get install -y netcat \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN [ ${AS_UID} -gt 500 -a $(getent passwd ${AS_UID}) ] && \
-		{ REUID_USER=$(getent passwd ${AS_UID} | awk -F: '{print $1}') \
-		&& usermod -u ${REUID_UID} ${REUID_USER} \
-		&& find / -path /proc -prune -o -uid ${AS_UID} -exec chown ${REUID_USER} {} \; -print \
-		&& echo "-----> Changed UID for ${REUID_USER} to ${REUID_UID}"; \
-		} || { echo -n ""; } \
-	&& [ ${AS_USER} != 'root' ] && { \
-		useradd ${AS_USER} -u ${AS_UID} -g ${AS_GID}; \
-		} || { echo -n ""; } \
-	&& echo "-----> Preparing for user [`id ${AS_USER}`]" \
-	&& mkdir -p ${APPDIR} \
-	&& mkdir -p /home/${AS_USER} \
-	&& chown ${AS_USER} ${APPDIR} /home/${AS_USER}
+#RUN [ ${AS_UID} -gt 500 -a $(getent passwd ${AS_UID}) ] && \
+#		{ REUID_USER=$(getent passwd ${AS_UID} | awk -F: '{print $1}') \
+#		&& usermod -u ${REUID_UID} ${REUID_USER} \
+#		&& find / -path /proc -prune -o -uid ${AS_UID} -exec chown ${REUID_USER} {} \; -print \
+#		&& echo "-----> Changed UID for ${REUID_USER} to ${REUID_UID}"; \
+#		} || { echo -n ""; } \
+#	&& [ ${AS_USER} != 'root' ] && { \
+#		useradd ${AS_USER} -u ${AS_UID} -g ${AS_GID}; \
+#		} || { echo -n ""; } \
+#	&& echo "-----> Preparing for user [`id ${AS_USER}`]" \
+#	&& mkdir -p ${APPDIR} \
+#	&& mkdir -p /home/${AS_USER} \
+#	&& chown ${AS_USER} ${APPDIR} /home/${AS_USER}
 
-USER ${AS_USER}
+#USER ${AS_USER}
 WORKDIR ${APPDIR}
 
 # install dependencies

@@ -55,6 +55,14 @@ up:: ##@Compose Start the whole development stack
 		up \
 		--build
 
+.PHONY: start
+start:: ##@Compose Start the whole development stack in detached mode
+	$(shell_env) docker-compose \
+		-f docker-compose.dev.yml \
+		up \
+		--build \
+		-d
+
 .PHONY: rm
 rm:: ##@Compose Clean docker-compose stack
 	docker-compose \
@@ -65,3 +73,10 @@ rm:: ##@Compose Clean docker-compose stack
 ifneq ($(running_container),)
 	@-docker rm -f $(running_container)
 endif
+
+# -----------------------------------------------------------------------------
+# Travis
+# -----------------------------------------------------------------------------
+.PHONY: waitforserver
+waitforserver:: ##@Helpers Run "yarn [<COMMAND>]" within the server container
+	docker exec -it ttrack-server wget --spider -S "http://localhost:8000/api/users/" ${OPTIONS}
