@@ -2,10 +2,11 @@
  * Test Utilities and Helpers for API Tests
  */
 
-import pg from 'pg';
+// import pg from 'pg';
 import { keys, values, range } from 'ramda';
+import { query } from '../pg';
 
-import dbConfigFile from './../../database.json';
+//import dbConfigFile from './../../database.json';
 
 // Constants
 
@@ -13,9 +14,9 @@ export const PERIOD_TYPE_IDS = ['Balance', 'Comment', 'Holiday', 'Nursing', 'Sic
 
 // Database Helper
 
-export function getDatabasePool() {
-    return new pg.Pool(dbConfigFile.dev);
-}
+/* export function getDatabasePool() {
+    return new pg.Pool(dbConfigFile.test);
+} */
 
 // create Entities in the Database
 
@@ -25,22 +26,21 @@ const createDatabaseArguments = obj => ({
     values: values(obj),
 });
 
-async function createEntity(client, table, entity) {
+async function createEntity(table, entity) {
     const arg = createDatabaseArguments(entity);
     const cols = arg.keys.join(',');
     const pl = arg.placeholder.join(',');
-    const { rows } = await client.query(`INSERT INTO ${table} (${cols}) VALUES (${pl}) RETURNING *;`, arg.values);
+    const { rows } = await query(`INSERT INTO ${table} (${cols}) VALUES (${pl}) RETURNING *;`, arg.values);
     return rows[0];
 }
 
-export async function createUser(client, user) {
-    return await createEntity(client, 'users', user);
+export async function createUser(user) {
+    return await createEntity('users', user);
 }
 
-export async function createUserWithTargetTime(client, userData, targetTime, targetStart) {
-    const user = await createUser(client, userData);
+export async function createUserWithTargetTime(userData, targetTime, targetStart) {
+    const user = await createUser(userData);
     const target = await createEntity(
-        client,
         'user_target_times',
         {
             utt_usr_id: user.usr_id,
@@ -52,18 +52,18 @@ export async function createUserWithTargetTime(client, userData, targetTime, tar
     return { user, target };
 }
 
-export async function createDay(client, day) {
-    return await createEntity(client, 'days', day);
+export async function createDay(day) {
+    return await createEntity('days', day);
 }
 
-export async function createPeriod(client, period) {
-    return await createEntity(client, 'periods', period);
+export async function createPeriod(period) {
+    return await createEntity('periods', period);
 }
 
 // Additional Database Calls
 
-export async function getTargetTimeForUserAndDate(client, userId, date) {
-    const { rows } = await client.query(
+export async function getTargetTimeForUserAndDate(userId, date) {
+    const { rows } = await query(
         'SELECT user_get_target_time FROM user_get_target_time($1, $2::DATE)',
         [userId, date],
     );
@@ -75,20 +75,19 @@ export async function getTargetTimeForUserAndDate(client, userId, date) {
 /**
  * Helper Function to Create a period stub with a new day and everything
  *
- * @param client
  * @param userId
  * @param date
  * @returns {Promise.<*>}
  */
-export async function createPeriodStubWithDayForUserAndDate(client, userId, date) {
-    const target = await getTargetTimeForUserAndDate(client, userId, date);
+export async function createPeriodStubWithDayForUserAndDate(userId, date) {
+    const target = await getTargetTimeForUserAndDate(userId, date);
 
     const dayFixture = {
         day_date: date,
         day_usr_id: userId,
         day_target_time: target,
     };
-    const day = await createDay(client, dayFixture);
+    const day = await createDay(dayFixture);
 
     // create period
     const periodFixture = {
@@ -96,5 +95,5 @@ export async function createPeriodStubWithDayForUserAndDate(client, userId, date
         per_day_id: day.day_id,
         per_pty_id: 'Work',
     };
-    return await createPeriod(client, periodFixture);
+    return await createPeriod(periodFixture);
 }
