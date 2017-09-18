@@ -5,7 +5,6 @@ const BaseJoi = require('joi')
 
 const Joi = BaseJoi.extend(Extension);
 
-const error = error => console.error(error);
 
 module.exports.timesheetFromToById = {
     validate: {
@@ -20,7 +19,6 @@ module.exports.timesheetFromToById = {
         return Timesheet.get(userId, from, to)
             .then(
                 (timesheet) => reply(timesheet),
-                error
             );
     }
 };

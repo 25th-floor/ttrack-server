@@ -5,7 +5,6 @@ module.exports.list = {
         return Period.list()
             .then(
                 success => reply(success.rows),
-                error => console.error(error)
             );
     }
 };

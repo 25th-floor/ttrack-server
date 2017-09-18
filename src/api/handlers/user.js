@@ -5,14 +5,12 @@ const BaseJoi = require('joi')
 
 const Joi = BaseJoi.extend(Extension);
 
-const error = error => console.error(error);
 
 module.exports.list = {
     handler: function (request, reply) {
         return User.list()
             .then(
                 success => reply(success),
-                error
             );
     },
     id: 'UserList'
@@ -28,7 +26,6 @@ module.exports.findById = {
         return User.get(request.params.id)
             .then(
                 success => reply(success),
-                error
             );
     }
 };

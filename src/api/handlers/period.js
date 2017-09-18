@@ -79,7 +79,6 @@ module.exports.delete = {
             .delete(per_id, userId)
             .then(
                 () => reply().code(204),
-                error => console.error(error)
             );
     }
 };
