@@ -1,14 +1,10 @@
-const Home = require('./handlers/home')
-    , User = require('./handlers/user')
+const User = require('./handlers/user')
     , Period = require('./handlers/period')
     , PeriodTypes = require('./handlers/periodTypes')
     , Timesheet = require('./handlers/timesheet');
 
 exports.register = (plugin, options, next) => {
     plugin.route([
-        // Home
-        { method: 'GET' , path: '/', config: Home.hello },
-
         // User
         { method: 'GET' , path: '/users', config: User.list },
         { method: 'GET' , path: '/users/{id}', config: User.findById },

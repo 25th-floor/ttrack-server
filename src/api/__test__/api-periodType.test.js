@@ -14,7 +14,7 @@ describe('ttrack API',() => {
                 console.log('server.register err:', err);
             }
             server.start(() => {
-                console.log('✅  Server is listening on ' + server.info.uri.toLowerCase());
+                server.log('✅  Server is listening on ' + server.info.uri.toLowerCase());
                 Server = server;
                 done();
             });
@@ -22,7 +22,7 @@ describe('ttrack API',() => {
     });
 
     afterAll(async (done) => {
-        console.log('STOP SERVER');
+        Server.log('STOP SERVER');
         await Server.stop();
         done();
     });

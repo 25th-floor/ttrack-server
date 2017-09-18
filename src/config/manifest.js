@@ -37,6 +37,16 @@ const manifest = {
     ],
     registrations: [
         {
+            plugin:{
+                register: 'inert',
+            }
+        },
+        {
+            plugin:{
+                register: 'vision',
+            }
+        },
+        {
             plugin: {
                 register: './pg',
                 options: {
