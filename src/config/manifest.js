@@ -86,18 +86,49 @@ const manifest = {
             }
         },
         {
+            "plugin": {
+                'register': 'hapi-swagger',
+                'options': {
+                    tags: [{
+                        "name": "api",
+                        "description": "Public user calls"
+                    }],
+                    "info": {
+                        "description": "This is the ttrack API",
+                        "version": "0.3.2",
+                        "title": "ttrack API",
+                        "contact": {
+                            "email": "ts@25th-floor.com",
+                        },
+                        "license": {
+                            "name": "MIT",
+                            "url": "https://opensource.org/licenses/MIT"
+                        }
+                    },
+                    documentationPath: '/docs',
+                }   
+            }
+        },{
             plugin: {
                 register: 'good',
                 options: {
-                    ops: { interval: 60000 },
                     reporters: {
-                        console: [
-                            { module: 'good-squeeze', name: 'Squeeze', args: [{ error: '*' }] }, { module: 'good-console' }, 'stdout'
-                        ]
+                        console: [{
+                            module: 'good-squeeze',
+                            name: 'Squeeze',
+                            args: [{
+                                log: '*',
+                                response: '*',
+                                error: '*',
+                            }]
+                        }, {
+                            module: 'good-console',
+                            args: [{ format: 'DD.MM.YYYY hh:mm:ss' }],
+                        }, 'stdout']
                     }
                 }
             }
-        }  
+        }
     ]
 };
 
