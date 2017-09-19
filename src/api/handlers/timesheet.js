@@ -21,6 +21,9 @@ module.exports.timesheetFromToById = {
                 '404':{
                     description: 'Not Found',
                 }
+                ,'400':{
+                    description: 'Bad Request',
+                }
             },
         },
     },

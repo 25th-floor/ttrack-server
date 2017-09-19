@@ -19,8 +19,8 @@ module.exports.list = {
         'hapi-swagger': {
             responses: {
                 '200': {
-                    'description': "list of users",
-                    schema:  Joi.array()
+                    description: "list of users",
+                    schema: Joi.array()
                         .items(User).label('Users')
                 },
                 '400':{
