@@ -1,6 +1,7 @@
 // const User = require('../../resources/user');
 const BaseJoi = require('joi')
     , Extension = require('joi-date-extensions')
+    , Boom = require('boom')
     , TimesheetResources = require('../../resources/timesheet');
 
 const Joi = BaseJoi.extend(Extension);
@@ -46,7 +47,10 @@ module.exports.timesheetFromToById = {
         const { userId, from ,to } = request.params;
         return TimesheetResources.get(userId, from, to)
             .then(
-                (timesheet) => reply(timesheet)
+                (timesheet) => {
+                    if(timesheet) return reply(timesheet);
+                    return reply(Boom.create(404, `Could not find timesheet for user ${userId}'`));
+                }
             );
     }
 };

@@ -190,6 +190,7 @@ module.exports = {
                         per_id = $1
                         AND day_usr_id = $2
                 )
+            RETURNING *
         `;
         return query(sql, [per_id, userId])
             .then(

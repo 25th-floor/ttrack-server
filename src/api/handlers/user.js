@@ -1,6 +1,7 @@
 // const User = require('../../resources/user');
 const BaseJoi = require('joi')
     , Extension = require('joi-date-extensions')
+    , Boom = require('boom')
     , UserResources = require('../../resources/user');
 
 const Joi = BaseJoi.extend(Extension);
@@ -68,7 +69,10 @@ module.exports.findById = {
     handler: function (request, reply) {
         return UserResources.get(request.params.id)
             .then(
-                success => reply(success),
+                success => {
+                    if(success) return reply(success);
+                    return reply(Boom.create(404, `Could not find user with id ${request.params.id}'`));
+                },
             );
     }
 };

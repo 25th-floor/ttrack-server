@@ -117,7 +117,10 @@ module.exports.delete = {
         return PeriodResources
             .delete(per_id, userId)
             .then(
-                () => reply().code(204)
+                (res) => {
+                    if (res.rows.length === 1) return reply().code(204);
+                    return reply(Boom.create(404, `Could not find period with id '${per_id} for user ${userId}'`));
+                }
             );
     }
 };

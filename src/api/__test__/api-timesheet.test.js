@@ -57,6 +57,14 @@ describe('ttrack API', () => {
                 expect(response.statusCode).toBe(200);
             });
 
+            it('should return 404 with user.usr_id 0', async () => {
+                const response = await Server.inject({
+                    method: 'GET',
+                    url: apiPath(0, '2001-02-01', '2001-03-01')
+                });
+                expect(response.statusCode).toBe(404);
+            });
+
             it("should return the carry information", async () => {
                 const response = await Server.inject({
                     method: 'GET',

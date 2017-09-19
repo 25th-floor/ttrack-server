@@ -112,6 +112,11 @@ describe('ttrack API', () => {
                 expect(response.statusCode).toBe(200);
                 expect(response.result).toEqual(R.head(result));
             });
+
+            it(`should return 404 with user id 0`, async () => {
+                const response = await Server.inject({ method: 'GET', url: `/api/users/${0}` });
+                expect(response.statusCode).toBe(404);
+            });
         });
 
         describe('Test Method not implemented', ()=>{
