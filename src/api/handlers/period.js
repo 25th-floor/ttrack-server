@@ -18,7 +18,7 @@ module.exports.create = {
     plugins: {
         'hapi-swagger': {
             responses: {
-                '200': {
+                '201': {
                     description: 'The Period has been created',
                     schema: Period
                 },
@@ -58,6 +58,9 @@ module.exports.update = {
                 },
                 '400':{
                     description: 'Bad Request',
+                },
+                '404':{
+                    description: 'Not Found',
                 }
             },
         },
@@ -96,8 +99,8 @@ module.exports.delete = {
                 '204': {
                     description: 'The Period has been deleted',
                 },
-                '400':{
-                    description: 'Bad Request',
+                '404':{
+                    description: 'Not Found',
                 }
             },
         },

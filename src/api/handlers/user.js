@@ -23,6 +23,12 @@ module.exports.list = {
                     schema:  Joi.array()
                         .items(User).label('Users')
                 },
+                '400':{
+                    description: 'Bad Request',
+                },
+                '404':{
+                    description: 'Not Found',
+                }
             },
         },
     },
@@ -46,7 +52,10 @@ module.exports.findById = {
                     schema: User
                 },
                 '400':{
-                    description: 'If the user cannot be found',
+                    description: 'Bad Request',
+                },
+                '404':{
+                    description: 'Not Found',
                 }
             },
         },

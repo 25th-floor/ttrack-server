@@ -18,8 +18,8 @@ module.exports.timesheetFromToById = {
                     description: 'The timesheet for a user in a given date range',
                     schema: Timesheet
                 },
-                '400':{
-                    description: 'Bad Request',
+                '404':{
+                    description: 'Not Found',
                 }
             },
         },
