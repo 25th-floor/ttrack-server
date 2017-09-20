@@ -17,8 +17,8 @@ describe('ttrack API', () => {
                 console.log('server.register err:', err);
             }
             server.start(() => {
-                console.log('✅  Server is listening on ' + server.info.uri.toLowerCase());
                 Server = server;
+                Server.log('✅  Server is listening on ' + server.info.uri.toLowerCase());
                 done();
             });
         });
@@ -87,13 +87,17 @@ describe('ttrack API', () => {
                 usr_employment_end: null
             };
 
-            it('GET Api /api/users returns our user', async () => {
+            it('GET Api /api/users returns our users', async () => {
                 //let uri = Server.lookup('UserList').path;
                 const response = await Server.inject({ method: 'GET', url: '/api/users', });
                 expect(response.statusCode).toBe(200);
                 expect(response.result).toBeArrayOfObjects();
 
-                expect(R.head(response.result)).toMatchObject({
+                const users = R.filter(
+                    R.propEq('usr_id',user.usr_id)
+                )(response.result);
+
+                expect(R.head(users)).toMatchObject({
                     ...userFixture,
                     usr_id: user.usr_id,
                 });
@@ -107,6 +111,11 @@ describe('ttrack API', () => {
                 const response = await Server.inject({ method: 'GET', url: `/api/users/${user.usr_id}` });
                 expect(response.statusCode).toBe(200);
                 expect(response.result).toEqual(R.head(result));
+            });
+
+            it(`should return 404 with user id 0`, async () => {
+                const response = await Server.inject({ method: 'GET', url: `/api/users/${0}` });
+                expect(response.statusCode).toBe(404);
             });
         });
 

@@ -244,8 +244,10 @@ module.exports = {
         };
         return User.get(userId)
             .then(
-                (user) => getTimesheetForTimeRange(user, dateRange),
-                err => Error(err)
+                (user) => {
+                    if(user) return getTimesheetForTimeRange(user, dateRange);
+                    return user;
+                }
             );
     },
 };

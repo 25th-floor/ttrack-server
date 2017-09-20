@@ -21,6 +21,10 @@ module.exports = function (wallaby) {
             }),
         }, 
 
+        delays: {
+            run: 500
+        },
+        
         testFramework: 'jest',
     };
 };

@@ -19,7 +19,7 @@ describe('ttrack API', () => {
                 console.log('server.register err:', err);
             }
             server.start(() => {
-                console.log('✅  Server is listening on ' + server.info.uri.toLowerCase());
+                server.log('✅  Server is listening on ' + server.info.uri.toLowerCase());
                 Server = server;
                 done();
             });
@@ -27,7 +27,7 @@ describe('ttrack API', () => {
     });
 
     afterAll(async (done) => {
-        console.log('STOP SERVER');
+        Server.log('STOP SERVER');
         await Server.stop();
         done();
     });
@@ -55,6 +55,14 @@ describe('ttrack API', () => {
                     url: apiPath(user.usr_id, '2001-02-01', '2001-03-01')
                 });
                 expect(response.statusCode).toBe(200);
+            });
+
+            it('should return 404 with user.usr_id 0', async () => {
+                const response = await Server.inject({
+                    method: 'GET',
+                    url: apiPath(0, '2001-02-01', '2001-03-01')
+                });
+                expect(response.statusCode).toBe(404);
             });
 
             it("should return the carry information", async () => {

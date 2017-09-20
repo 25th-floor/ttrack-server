@@ -20,7 +20,7 @@ describe('ttrack API',() => {
                 console.log('server.register err:', err);
             }
             server.start(() => {
-                console.log('✅  Server is listening on ' + server.info.uri.toLowerCase());
+                server.log('✅  Server is listening on ' + server.info.uri.toLowerCase());
                 Server = server;
                 done();
             });
@@ -28,7 +28,7 @@ describe('ttrack API',() => {
     });
 
     afterAll(async (done) => {
-        console.log('STOP SERVER');
+        Server.log('STOP SERVER');
         await Server.stop();
         done();
     });
@@ -272,6 +272,37 @@ describe('ttrack API',() => {
                     expect(response.statusCode).toBe(405);
                 });
             });
+            
+            it(`should return 404 Status code on PUT with userID of 0`, async ()=>{
+                const response  = await Server.inject({ 
+                    method: 'PUT',
+                    payload: {
+                        date,
+                        "per_pty_id": 'Work',
+                        "per_start": "PT8H",
+                    },
+                    url: apiPutAndDeletePath(0, period.per_id) });
+                expect(response.statusCode).toBe(404);
+            });
+
+            it(`should return 404 Status code on PUT with period.per_id of 0`, async ()=>{
+                const response  = await Server.inject({ 
+                    method: 'PUT',
+                    payload: {
+                        date,
+                        "per_pty_id": 'Work',
+                        "per_start": "PT8H",
+                    },
+                    url: apiPutAndDeletePath(user.usr_id, 0) });
+                expect(response.statusCode).toBe(404);
+            });
+
+            it(`should return 404 Status code on DELETE with user.usr_id of 0`, async ()=>{
+                const response  = await Server.inject({ 
+                    method: 'DELETE',
+                    url: apiPutAndDeletePath(0, user.usr_id) });
+                expect(response.statusCode).toBe(404);
+            });
 
             it("should fail if payload is empty", async () => {
                 const response  = await Server.inject({ 
@@ -370,7 +401,7 @@ describe('ttrack API',() => {
                 const response  = await Server.inject({
                     method: 'PUT',
                     payload,
-                    url: apiPutAndDeletePath(user.usr_id, wrongId)//?
+                    url: apiPutAndDeletePath(user.usr_id, wrongId)
                 });
                 expect(response.statusCode).toBe(404);
                 expect(response.result.message).toBe(`Could not find period with id '${wrongId}'`);
@@ -435,14 +466,14 @@ describe('ttrack API',() => {
                 expect(result.rows.length).toBe(0);
             });
 
-            it("should not throw any errors if period is unknown", async () => {
-                const response  = await Server.inject({ 
-                    method: 'DELETE',
-                    payload: {},
-                    url: apiPutAndDeletePath(user.usr_id, period.per_id+10000)
-                });
-                expect(response.statusCode).toBe(204);
-            });
+            it("should not throw any errors if period is unknown", async () => { 
+                const response  = await Server.inject({  
+                    method: 'DELETE', 
+                    payload: {}, 
+                    url: apiPutAndDeletePath(user.usr_id, period.per_id+10000) 
+                }); 
+                expect(response.statusCode).toBe(204); 
+            }); 
         });
     });
 });

@@ -1,5 +1,4 @@
 'use strict';
-
 const Glue = require('glue');
 const manifest = require('./config/manifest');
 
@@ -17,6 +16,6 @@ Glue.compose(manifest, { relativeTo: __dirname }, (err, server) => {
         console.log('server.register err:', err);
     }
     server.start(() => {
-        console.log('✅  Server is listening on ' + server.info.uri.toLowerCase());
+        server.log('✅  Server is listening on ' + server.info.uri.toLowerCase());
     });
 });
