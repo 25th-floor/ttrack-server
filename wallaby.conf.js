@@ -21,8 +21,14 @@ module.exports = function (wallaby) {
             }),
         }, 
 
+        /*setup: function (w) {
+            w.testFramework.configure({
+               setupTestFrameworkScriptFile: '<rootDir>/setup-jasmine-env.js'
+            });
+        }, */
+
         delays: {
-            run: 500
+            run: 1000
         },
         
         testFramework: 'jest',
