@@ -304,20 +304,6 @@ describe('ttrack API',() => {
                 expect(response.statusCode).toBe(404);
             });
 
-            it(`should return 404 Status code on DELETE with period.per_id of 0`, async ()=>{
-                const response  = await Server.inject({ 
-                    method: 'DELETE',
-                    url: apiPutAndDeletePath(period.per_id, 0) });
-                expect(response.statusCode).toBe(404);
-            });
-
-            it(`should return 404 Status code on DELETE with period.per_id and user.usr_id of 0`, async ()=>{
-                const response  = await Server.inject({ 
-                    method: 'DELETE',
-                    url: apiPutAndDeletePath(0, 0) });
-                expect(response.statusCode).toBe(404);
-            });
-
             it("should fail if payload is empty", async () => {
                 const response  = await Server.inject({ 
                     method: 'PUT',
@@ -415,7 +401,7 @@ describe('ttrack API',() => {
                 const response  = await Server.inject({
                     method: 'PUT',
                     payload,
-                    url: apiPutAndDeletePath(user.usr_id, wrongId)//?
+                    url: apiPutAndDeletePath(user.usr_id, wrongId)
                 });
                 expect(response.statusCode).toBe(404);
                 expect(response.result.message).toBe(`Could not find period with id '${wrongId}'`);
@@ -479,6 +465,15 @@ describe('ttrack API',() => {
                 const result = await query(`SELECT * from periods WHERE per_id = ${period.per_id}`);
                 expect(result.rows.length).toBe(0);
             });
+
+            it("should not throw any errors if period is unknown", async () => { 
+                const response  = await Server.inject({  
+                    method: 'DELETE', 
+                    payload: {}, 
+                    url: apiPutAndDeletePath(user.usr_id, period.per_id+10000) 
+                }); 
+                expect(response.statusCode).toBe(204); 
+            }); 
         });
     });
 });

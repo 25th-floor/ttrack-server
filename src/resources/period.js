@@ -190,12 +190,14 @@ module.exports = {
                         per_id = $1
                         AND day_usr_id = $2
                 )
-            RETURNING *
         `;
-        return query(sql, [per_id, userId])
+
+        return User.get(userId)
             .then(
-                result => result,
-                err => Error('error running select query', err)
+                (success) => {
+                    if(success) return query(sql, [per_id, userId]);
+                    return success;
+                }
             );
     },
     preparePeriodForApiResponse,
