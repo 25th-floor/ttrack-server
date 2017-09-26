@@ -1,7 +1,7 @@
 require('moment-duration-format');
 const Q = require('q');
 const moment = require('moment');
-const _ = require('lodash');
+const R = require('ramda');
 const User = require('./user');
 const { query } = require('../pg');
 
@@ -14,47 +14,53 @@ const { query } = require('../pg');
  * @param target the users target time for that day
  * @returns {*} promise
  */
-function fetchDayIdForUser(date, user, target) {
-    return query('SELECT day_id FROM days WHERE day_date = $1 AND day_usr_id = $2', [date, user.usr_id])
-        .then((result) => {
-            if (result.rows.length) {
-                return result.rows[0].day_id;
-            }
-
-            const queryString = 'INSERT INTO days VALUES (default, $1, $2, $3) RETURNING day_id';
-            return query(queryString, [date, user.usr_id, target])
-                .then(res => res.rows[0].day_id);
-        });
+async function fetchDayIdForUser(date, user, target) {
+    let { rows } = await query('SELECT day_id FROM days WHERE day_date = $1 AND day_usr_id = $2', [date, user.usr_id]);
+    if(R.head(rows)) return R.head(rows).day_id; 
+ 
+    const newDay = await query('INSERT INTO days VALUES (default, $1, $2, $3) RETURNING day_id', [date, user.usr_id, target]);
+    return R.head(newDay.rows).day_id;
 }
 
-function fetchPeriodTypes() {
-    return query('SElECT * FROM period_types').then((result) => {
-        //TODO what?
-        const map = {};
-        result.rows.forEach((row) => {
-            map[row.pty_name] = row.pty_id;
-        });
-        return map;
-    });
+async function fetchPeriodTypes() {
+    const { rows } = await query('SElECT * FROM period_types');
+    // creates from an array an object with obj.pty_name as key and obj.pty_id as value
+    return  R.reduce((acc,obj) => ({
+        ...acc,
+        ...R.objOf(obj.pty_name)(obj.pty_id), //exp sick : 'krank'
+    }),{},rows);
 }
 
+// TODO what das this ?
 function convertToTime(time) {
     return time ? moment.duration(time).format('hh:mm:', { trim: false }) : null;
 }
+/**
+ * Convert string(08:00)
+ * @param {string} value
+ * @returns {object} { hours:08, minutes: 00}
+ */
+const convertToTimeObject = (value) => {
+    if(value === null) return value;
+    const duration = moment.duration(value);
+    return {
+        hours: duration.get('hours') + (duration.get('days') * 24),
+        minutes: duration.get('minutes'),
+    };
+};
 
+/**
+ * Mutate time string from periodData (per_start, per_stop) to DateTimeObject
+ * @param {Object} periodData 
+ */
 function preparePeriodForApiResponse(periodData) {
-    return _.mapValues(periodData, (val, key) => {
-        // transform time strings
-        if (_.includes(['per_start', 'per_stop'], key)) {
-            if (val === null) return null;
-            const duration = moment.duration(val);
-            return {
-                hours: duration.get('hours') + (duration.get('days') * 24),
-                minutes: duration.get('minutes'),
-            };
-        }
-        return val;
-    });
+    if(!periodData) return periodData;
+    const containsKeys = R.allPass( [ R.hasIn('per_start'), R.hasIn('per_stop')] )(periodData);
+    
+    if (!containsKeys) return periodData;
+    periodData.per_start = convertToTimeObject(periodData.per_start);
+    periodData.per_stop = convertToTimeObject(periodData.per_stop);
+    return periodData;
 }
 
 module.exports = {
@@ -67,64 +73,72 @@ module.exports = {
              AND day_usr_id = $2
         `,
             [id, userId]
-        )
-            .then((result) => preparePeriodForApiResponse(result.rows[0]));
+        ).then(({rows}) => preparePeriodForApiResponse(R.head(rows)));
     },
-    post(userId, postData) {
-        const userPromise = User.get(userId);
-        const targetPromise = User.getTargetTime(userId, postData.date);
+    async post(userId, postData) {
+        const user = await User.get(userId);
+        const targetTime = await User.getTargetTime(userId, postData.date);
+        const periodTypes = await fetchPeriodTypes();
+        const dayId = await fetchDayIdForUser(postData.date, user, targetTime);
+        
+        const data = postData;
+        // TODO: check if pty_id is valid type if defined 
+        // TODO No test defined for these case
+        if (data.per_pty_id === undefined) {
+            data.per_pty_id = periodTypes.Arbeitszeit;
+        }
 
-        return Q.all([userPromise, targetPromise])
-            .spread((user, target) => {
-                return Q.all([
-                    fetchPeriodTypes(),
-                    fetchDayIdForUser(postData.date, user, target),
-                ]).spread((types, dayId) => {
-                    const data = postData;
-                    // TODO: check if pty_id is valid type if defined
-                    if (data.per_pty_id === undefined) {
-                        data.per_pty_id = types.Arbeitszeit;
-                    }
+        if (data.per_start) {
+            data.per_stop = data.per_stop ? convertToTime(data.per_stop) : null;
+            data.per_start = convertToTime(data.per_start);
+            data.per_break = convertToTime(data.per_break);
+            const sql = `
+                INSERT INTO
+                    periods (
+                        per_start,
+                        per_stop,
+                        per_break,
+                        per_comment,
+                        per_day_id,
+                        per_pty_id
+                    )
+                VALUES
+                    ($1, $2, $3, $4, $5, $6) RETURNING *
+            `;
+            const newPeriod =  await query(sql,[
+                data.per_start,
+                data.per_stop,
+                data.per_break,
+                data.per_comment,
+                dayId,
+                data.per_pty_id
+            ]);
 
-                    if (data.per_start) {
-                        data.per_stop = data.per_stop ? convertToTime(data.per_stop) : null;
-                        data.per_start = convertToTime(data.per_start);
-                        data.per_break = convertToTime(data.per_break);
+            return preparePeriodForApiResponse(
+                R.head(newPeriod.rows)
+            );
+        }
 
-                        return query(`
-                            INSERT INTO
-                                periods (
-                                    per_start,
-                                    per_stop,
-                                    per_break,
-                                    per_comment,
-                                    per_day_id,
-                                    per_pty_id
-                                )
-                            VALUES
-                                ($1, $2, $3, $4, $5, $6) RETURNING *
-                        `,
-                            [data.per_start, data.per_stop, data.per_break, data.per_comment, dayId, data.per_pty_id]
-                        );
-                    }
+        data.per_duration = convertToTime(data.per_duration);
+        const sql = `
+            INSERT INTO
+                periods (
+                    per_duration,
+                    per_comment,
+                    per_day_id,
+                    per_pty_id
+                )
+            VALUES
+                ($1, $2, $3, $4) RETURNING *
+        `;
+        const {rows} = await query(sql,[
+            data.per_duration,
+            data.per_comment,
+            dayId,
+            data.per_pty_id]
+        );
 
-                    data.per_duration = convertToTime(data.per_duration);
-                    return query(`
-                        INSERT INTO
-                            periods (
-                                per_duration,
-                                per_comment,
-                                per_day_id,
-                                per_pty_id
-                            )
-                        VALUES
-                            ($1, $2, $3, $4) RETURNING *
-                        `,
-                        [data.per_duration, data.per_comment, dayId, data.per_pty_id]);
-                })
-                    .then((result) => preparePeriodForApiResponse(result.rows[0]));
-
-            });
+        return preparePeriodForApiResponse(R.head(rows));
     },
     put(userId, putData) {
         return Q.all([fetchPeriodTypes()])
@@ -172,7 +186,7 @@ module.exports = {
                 `,
                     [data.per_duration, data.per_comment, data.per_pty_id, data.per_id]);
             })
-            .then((result) => preparePeriodForApiResponse(result.rows[0]));
+            .then(({rows}) => preparePeriodForApiResponse(R.head(rows)));
     },
     //TODO uniq parameter wording 
     delete(per_id, userId) {

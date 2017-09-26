@@ -1,4 +1,3 @@
-// const User = require('../../resources/user');
 const R = require('ramda')
     , Boom = require('boom')
     , PeriodResources = require('../../resources/period');

@@ -10,7 +10,7 @@ module.exports = {
     },
     async get(userId) {
         const sql = 'SELECT * FROM users WHERE usr_id = $1';
-        const { rows } =  await query(sql, [userId])
+        const { rows } =  await query(sql, [userId]);
         return R.head(rows);
     },
     // get Users TargetTime for a specific date from the database

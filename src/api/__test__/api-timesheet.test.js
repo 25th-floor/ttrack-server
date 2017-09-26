@@ -85,6 +85,14 @@ describe('ttrack API', () => {
                 expect(response.result.days.length).toBe(29);
             });
 
+            it("should return 20 days", async () => {
+                const response = await Server.inject({
+                    method: 'GET',
+                    url: apiPath(user.usr_id, '2001-01-01', '2001-01-20')
+                });
+                expect(response.result.days.length).toBe(20);
+            });
+
             it("should return have day information", async () => {
                 const response = await Server.inject({
                     method: 'GET',
