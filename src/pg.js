@@ -5,6 +5,7 @@ const { Pool } = require('pg');
 const env = process.env.NODE_ENV || 'development';
 let config;
 let pool;
+let Server;
 //let counter = 0;
 
 function initializeConnection(server, next){
@@ -14,6 +15,7 @@ function initializeConnection(server, next){
         };
     }
     pool = new Pool(config);
+    Server = server;
     pool.on('error', (err, client) => {
         console.error('Unexpected error on idle client', client, err);
         process.exit(-1);
@@ -38,11 +40,12 @@ async function query(SQL, args) {
         console.info(sqlFormatter.format(SQL,{ indent: "    "}));
     }
  */
-    try {
-        return  await pool.query(SQL, args);
+try {
+        const result = await pool.query(SQL, args);
+        return result;
     } catch (error) {
-        console.error(error);
-        return Error(error);
+        Server.log(['error'],error)
+        return error;
     }
 }
 
