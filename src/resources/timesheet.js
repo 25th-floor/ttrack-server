@@ -1,6 +1,7 @@
 const _ = require('lodash')
     , moment = require('moment')
     , Q = require('q')
+    , R = require('ramda')
     , util = require('../common/util')
     , period = require('./period')
     , User = require('./user')
@@ -159,84 +160,97 @@ function fetchPeriodTypes() {
         .then(_.property('rows'));
 }
 
-function createMissingHolidays(dateRange, user, start, existingHolidays, holidayPeriodTypeId) {
-    const employmentEnd = moment(user.usr_employment_end);
-
-    const expectedHolidays = util.getHolidaysForDateRange(dateRange);
-    const newHolidays = expectedHolidays
-        // omit all holidays that are in the database already
-        .filter(({ date }) => !existingHolidays.some(holiday => moment(holiday.day_date).format('YYYY-MM-DD') === date))
-        // omit all holidays that are not within employment
-        .filter(({ date }) => {
-            const day = moment(date);
-            return !(day.isBefore(start) || day.isAfter(employmentEnd));
-        });
-
-    // eslint-disable-next-line new-cap
-    const newPeriodPromises = _.map(newHolidays, ({ comment, date }) => Q.Promise((resolve) => {
-        const mDate = moment(date, 'YYYY-MM-DD').toDate();
-        // get user target time for that specific date (handles weekends correct)
-        User.getTargetTime(user.usr_id, mDate, (val) => {
-            const duration = moment.duration(val);
-            const newPeriod = {
-                date: mDate,
-                userId: user.usr_id,
-                per_duration: duration.format('hh:mm'),
-                per_comment: comment,
-                per_pty_id: holidayPeriodTypeId,
-            };
-
-            period.post(newPeriod.userId, newPeriod, resolve);
-        });
-    }));
-
-    return Q.all(newPeriodPromises);
+async function createPeriod(user,holidayPeriodTypeId,{comment, date}){
+    const mDate = moment(date, 'YYYY-MM-DD').toDate();
+    const targetTime = await User.getTargetTime(user.usr_id, mDate);
+    const duration = moment.duration(targetTime);
+    const newPeriod = {
+        date: mDate,
+        userId: user.usr_id,
+        per_duration: duration.format('hh:mm'),
+        per_comment: comment,
+        per_pty_id: holidayPeriodTypeId,
+    };
+    const posted = await period.post(newPeriod.userId, newPeriod);
+    return posted;
 }
 
-function getTimesheetForTimeRange(user, dateRange) {
+/**
+ * Create missing holidays in db
+ * @param {object} dateRange 
+ * @param {object} user 
+ * @param {userStart} userStart 
+ * @param {array(object)} existingHolidays Contains periods 
+ * @param {string} holidayPeriodTypeId contains the type of period
+ */
+async function createMissingHolidays(dateRange, user, userStart, existingHolidays, holidayPeriodTypeId) {
+    const employmentEnd = moment(user.usr_employment_end);
+    const expectedHolidays = util.getHolidaysForDateRange(dateRange);
+
+    const omitCreatedHolidays = R.filter(
+        ({ date }) => !existingHolidays.some(holiday => moment(holiday.day_date).format('YYYY-MM-DD') === date)
+    );
+
+    const omitEmploymentEnd = R.filter(
+        ({ date }) =>  !(moment(date).isBefore(userStart) || moment(date).isAfter(employmentEnd))
+    );
+
+    const newHolidays = R.compose(
+        omitEmploymentEnd,
+        omitCreatedHolidays,
+    )(expectedHolidays);
+
+    const createHolidayPeriod = R.curry(createPeriod)(user)(holidayPeriodTypeId);
+    const newHolidayPeriods = R.map(createHolidayPeriod)(newHolidays);
+    // newHolidayPeriods contains an arry of promises
+    // to resolve promises in an array q.all is needed
+    return Q.all(newHolidayPeriods);
+}
+/**
+ * Returns new created holidays for user a
+ * @param {object} user db_user
+ * @param {object} dateRange 
+ */
+async function holidayControlFlow(user, dateRange){
+    const userId = user.usr_id;
+    const userStart = await User.getStartDate(userId);
+    const existingHolidays = await fetchHolidays(userId, dateRange);
+    const holidayPeriodTypeId = await fetchHolidayPeriodTypeId();
+
+    const createdHolidays = await createMissingHolidays(dateRange, user, userStart, existingHolidays, holidayPeriodTypeId);
+    return createdHolidays;
+}
+
+/**
+ * Returns Timesheet for user and create missing holidays
+ * @param {object} user db_user
+ * @param {object} dateRange 
+ */
+async function getTimesheetForTimeRange(user, dateRange) {
     const userId = user.usr_id;
     // don't start with range start, but 1 day before for carry data calculation
     const carryStart = moment(dateRange.start);
     carryStart.subtract(1, 'days');
 
-    const carryDataPromise = calculateCarryData(user, carryStart.toDate());
+    // CREATE HOLIDAYS
+    await holidayControlFlow(user, dateRange);
 
-    // fetch existing holidays within dateRange
-    const holidayPromise = fetchHolidays(userId, dateRange);
+    const carryData = await calculateCarryData(user, carryStart.toDate());
+    const periodTypes = await fetchPeriodTypes();
+    const timesheet = await fetchPeriodsGroupedByDay(userId, dateRange, periodTypes);
 
-    // fetch holiday period type
-    const periodTypePromise = fetchHolidayPeriodTypeId();
-
-    // fetch period types
-    const periodTypesPromise = fetchPeriodTypes();
-
-    // get start for user
-    const userStartPromise = User.getStartDate(userId);
-
-    return Q.all([holidayPromise, periodTypePromise, periodTypesPromise, userStartPromise])
-        .spread(
-            (existingHolidays, holidayPeriodTypeId, periodTypes, userStart) => [
-                createMissingHolidays(dateRange, user, userStart, existingHolidays, holidayPeriodTypeId),
-                periodTypes,
-            ])
-        .spread(
-            (createdHolidays, periodTypes) => Q.all([
-                fetchPeriodsGroupedByDay(userId, dateRange, periodTypes),
-                carryDataPromise,
-            ])
-        )
-        .spread((timesheet, carryData) => {
-            return {
-                ...timesheet,
-                carryTime: carryData.carryTime,
-                // debug information, so we know in which timeframe the carryTime was calculated
-                carryFrom: carryData.carryFrom,
-                carryTo: carryData.carryTo,
-            };
-        });
+    return {
+        ...timesheet,
+        carryTime: carryData.carryTime,
+        // debug information, so we know in which timeframe the carryTime was calculated
+        carryFrom: carryData.carryFrom,
+        carryTo: carryData.carryTo,
+    };
 }
 
-module.exports = {
+module.exports = {  
+    holidayControlFlow,
+    // HANDLER
     get(userId, fromDate, toDate) {
         const dateRange = {
             start: fromDate,

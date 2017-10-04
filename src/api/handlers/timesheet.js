@@ -29,7 +29,7 @@ module.exports.timesheetFromToById = {
         },
     },
     validate: {
-        params: {
+        params: Joi.object({
             userId: UserId.required(),
             from: Joi.date()
                 .format('YYYY-MM-DD')
@@ -38,10 +38,11 @@ module.exports.timesheetFromToById = {
                 .required(),
             to: Joi.date()
                 .description('endpoint of the timesheet')
-                .example('2017-05-01')
                 .format('YYYY-MM-DD')
+                .example('2017-05-01')
+                .min(Joi.ref('from')) // It is important that .min is below example see https://github.com/hapijs/joi/issues/1186
                 .required(), 
-        }
+        })
     },
     handler: function (request, reply){
         const { userId, from ,to } = request.params;
