@@ -1,11 +1,12 @@
-const moment = require('moment')
-    , R = require('ramda')
-    , { query } = require('../pg');
+const moment = require('moment');
+const R = require('ramda');
+const { query } = require('../pg');
 
 module.exports = {
     async list() {
-        const sql = 'SELECT * FROM users WHERE usr_employment_start IS NULL OR usr_employment_end IS NULL';
-        const { rows } = await query(sql);
+        const today = moment();
+        const sql = 'SELECT * FROM users WHERE (usr_employment_start IS NULL OR usr_employment_start <= $1) AND (usr_employment_end IS NULL OR usr_employment_end >= $1)';
+        const { rows } = await query(sql, [today.format('YYYY-MM-DD')]);
         return rows;
     },
     async get(userId) {

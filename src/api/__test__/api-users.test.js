@@ -1,6 +1,8 @@
 import Glue from 'glue';
 import path from 'path';
 import R from 'ramda';
+import moment from 'moment';
+
 import { query, getClient } from '../../pg';
 import manifest from '../../config/manifest';
 
@@ -116,6 +118,49 @@ describe('ttrack API', () => {
             it(`should return 404 with user id 0`, async () => {
                 const response = await Server.inject({ method: 'GET', url: `/api/users/${0}` });
                 expect(response.statusCode).toBe(404);
+            });
+
+            it('should return users that are only available within this month', async () => {
+                const today = moment();
+                const start = today.clone().subtract(1, 'month').format("YYYY-MM-DD");
+                const end = today.clone().add(1, 'month').format("YYYY-MM-DD");
+
+                const sql = 'UPDATE users SET usr_employment_start = $1, usr_employment_end = $2 WHERE usr_id = $3 RETURNING *';
+                await query(sql, [start, end, user.usr_id]);
+
+                const response = await Server.inject({ method: 'GET', url: '/api/users', });
+                expect(response.statusCode).toBe(200);
+                expect(response.result).toBeArrayOfObjects();
+
+                const users = R.filter(
+                    R.propEq('usr_id',user.usr_id)
+                )(response.result);
+
+                expect(R.head(users)).toMatchObject({
+                    ...user,
+                    usr_id: user.usr_id,
+                    usr_employment_start: new Date(start),
+                    usr_employment_end: new Date(end)
+                });
+            });
+
+            it('should ignore users that are no longer active', async () => {
+                const today = moment();
+                const start = today.clone().subtract(1, 'month').format("YYYY-MM-DD");
+                const end = today.clone().subtract(1, 'day').format("YYYY-MM-DD");
+
+                const sql = 'UPDATE users SET usr_employment_start = $1, usr_employment_end = $2 WHERE usr_id = $3 RETURNING *';
+                await query(sql, [start, end, user.usr_id]);
+
+                const response = await Server.inject({ method: 'GET', url: '/api/users', });
+                expect(response.statusCode).toBe(200);
+                expect(response.result).toBeArrayOfObjects();
+
+                const users = R.filter(
+                    R.propEq('usr_id',user.usr_id)
+                )(response.result);
+
+                expect(users).toBeEmptyArray();
             });
         });
 
