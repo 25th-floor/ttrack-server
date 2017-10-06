@@ -53,6 +53,7 @@ There are several functions implemented which do much of the work.
 * **user_get_day_periods**(id INTEGER, date_from TIMESTAMP, date_to TIMESTAMP): Return days between the interval for the user including the periods for that time
 * **user_get_start_date**(id integer): get first date for a user relevant for ttrack
 * **user_get_target_time**(id INTEGER, day_date DATE): get the calculated target time for a user on a given date.
+* **ttrack_get_all_vacations**(): get all vacations of all users from now to the beginning of ttrack
 
 ##### Helper Functions used by other Functions
 * **user_get_average_day_time**(id integer, day_date date): get the average day time of a user, does not check for workdays. (used by user_get_target_time)
