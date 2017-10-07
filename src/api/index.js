@@ -1,7 +1,8 @@
-const User = require('./handlers/user')
-    , Period = require('./handlers/period')
-    , PeriodTypes = require('./handlers/periodTypes')
-    , Timesheet = require('./handlers/timesheet');
+const User = require('./handlers/user');
+const Period = require('./handlers/period');
+const PeriodTypes = require('./handlers/periodTypes');
+const Timesheet = require('./handlers/timesheet');
+const Vacations = require('./handlers/vacations');
 
 exports.register = (plugin, options, next) => {
     plugin.route([
@@ -20,6 +21,9 @@ exports.register = (plugin, options, next) => {
         // PeriodTypes
         { method: 'GET' , path: '/period-types', config: PeriodTypes.list },
         
+        // Vacations
+        { method: 'GET' , path: '/vacations', config: Vacations.list },
+
     ]);
     next();
 };

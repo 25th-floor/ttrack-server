@@ -51,31 +51,31 @@ const manifest = {
                 register: './pg',
                 options: {
                     development :{
-                        "user": "postgres", 
-                        "password": "postgres", 
-                        "database": "ttrack", 
-                        "port": "5432", 
+                        "user": "postgres",
+                        "password": "postgres",
+                        "database": "ttrack",
+                        "port": "5432",
                         "host": "postgres",
-                        "driver": "pg", 
+                        "driver": "pg",
                         "schema": "public"
                     },
                     test:{
                         //connectionString: process.env.DATABASE_URL
-                        "user": "postgres", 
-                        "password": "postgres", 
-                        "database": "ttrack_test", 
-                        "port": "5432", 
+                        "user": "postgres",
+                        "password": "postgres",
+                        "database": "ttrack_test",
+                        "port": "5432",
                         "host": "postgres",
-                        "driver": "pg", 
+                        "driver": "pg",
                         "schema": "public"
                     },
                     production: {
-                        "user": "postgres", 
-                        "password": "postgres", 
-                        "database": "ttrack", 
-                        "port": "5432", 
+                        "user": "postgres",
+                        "password": "postgres",
+                        "database": "ttrack",
+                        "port": "5432",
                         "host": "localhost",
-                        "driver": "pg", 
+                        "driver": "pg",
                         "schema": "public"
                     }
                 }
@@ -83,8 +83,8 @@ const manifest = {
         },
         {
             plugin: './api',
-            options: { 
-                routes: { prefix: '/api' } 
+            options: {
+                routes: { prefix: '/api' }
             }
         },
         {
@@ -116,7 +116,7 @@ const manifest = {
                         }
                     },
                     documentationPath: '/docs',
-                }   
+                }
             }
         },{
             plugin: {

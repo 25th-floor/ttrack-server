@@ -102,5 +102,17 @@ const PostPeriod = Joi.object({
         .example('My awesome comment for the day')
         .description("a comment field for the user to add comments to a period"),
 }).label('Post Period');
-
 module.exports.PostPeriod = PostPeriod;
+
+const Vacancy = Joi.object({
+    "day_id": Joi.number().example('123'),
+    "day_date": Joi.string().example('2016-08-29T00:00:00.000Z'),
+    "day_usr_id": Joi.number().example(32).description('id of the user'),
+    "day_target_time": DateTime,
+    "usr_firstname": Joi.string().example('jack').required(),
+    "usr_lastname": Joi.string().example('Bauer').required(),
+    "per_id": PeriodId,
+    "per_comment":Joi.string().example('My awesome comment for the day').description('a comment field for the user to add comments to a period'),
+    "per_duration": DateTime,
+});
+module.exports.Vacancy = Vacancy;
