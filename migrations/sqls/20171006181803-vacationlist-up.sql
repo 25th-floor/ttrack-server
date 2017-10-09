@@ -3,8 +3,8 @@ CREATE OR REPLACE FUNCTION ttrack_get_all_vacations ()
   RETURNS TABLE(
     day_id          INTEGER,
     day_date        DATE,
-    day_usr_id      INTEGER,
     day_target_time INTERVAL,
+    usr_id          INTEGER,
     usr_firstname   TEXT,
     usr_lastname    TEXT,
     per_id          INTEGER,
@@ -16,8 +16,8 @@ BEGIN
   RETURN QUERY SELECT
                  days.day_id,
                  days.day_date,
-                 days.day_usr_id,
                  days.day_target_time,
+                 users.usr_id,
                  users.usr_firstname,
                  users.usr_lastname,
                  periods.per_id,
