@@ -43,6 +43,7 @@ describe('ttrack API', () => {
         });
 
         afterAll(async (done) => {
+            await query(`DELETE FROM days WHERE day_usr_id = ${user.usr_id}`);
             await query(`DELETE FROM user_target_times WHERE utt_usr_id = ${user.usr_id}`);
             await query(`DELETE FROM users WHERE usr_id = ${user.usr_id}`);
             done();
