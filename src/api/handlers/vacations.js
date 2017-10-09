@@ -64,17 +64,15 @@ module.exports.list = {
         let { start, limit } = request.query;
         if (start > total) start = total;
         if (limit > total) limit = total;
-        return list(start, limit)
-            .then(
-                success => reply({
-                    _meta: {
-                        total,
-                        limit,
-                        start,
-                        count: success.length,
-                    },
-                    vacations: success
-                }),
-            );
+        const success = await list(start, limit);
+        reply({
+            _meta: {
+                total,
+                limit,
+                start,
+                count: success.length,
+            },
+            vacations: success
+        });
     },
 };
