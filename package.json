@@ -8,7 +8,7 @@
   "scripts": {
     "migration": "db-migrate up",
     "migration-test": "db-migrate up --config database.json -e test",
-    "test": "NODE_ENV=test jest --bail --no-cache ./src/api/**/*",
+    "test": "NODE_ENV=test jest --bail --no-cache",
     "start": "npm-run-all --parallel lint start:server",
     "start:server": "nodemon  --harmony src/server.js",
     "lint": "eslint . --ext .js"
