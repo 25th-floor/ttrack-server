@@ -1,7 +1,8 @@
-const User = require('./handlers/user');
+const Home = require('./handlers/home');
 const Period = require('./handlers/period');
 const PeriodTypes = require('./handlers/periodTypes');
 const Timesheet = require('./handlers/timesheet');
+const User = require('./handlers/user');
 const Vacations = require('./handlers/vacations');
 
 exports.register = (plugin, options, next) => {
@@ -24,6 +25,8 @@ exports.register = (plugin, options, next) => {
         // Vacations
         { method: 'GET' , path: '/vacations', config: Vacations.list },
 
+        // Home
+        { method: 'GET' , path: '/', config: Home.list },
     ]);
     next();
 };
