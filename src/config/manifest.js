@@ -1,4 +1,4 @@
-
+const packageJson = require('../../package.json');
 
 const envKey = key => {
     const env = process.env.NODE_ENV || 'development';
@@ -37,12 +37,12 @@ const manifest = {
     ],
     registrations: [
         {
-            plugin:{
+            plugin: {
                 register: 'inert',
             }
         },
         {
-            plugin:{
+            plugin: {
                 register: 'vision',
             }
         },
@@ -50,33 +50,33 @@ const manifest = {
             plugin: {
                 register: './pg',
                 options: {
-                    development :{
-                        "user": "postgres",
-                        "password": "postgres",
-                        "database": "ttrack",
-                        "port": "5432",
-                        "host": "postgres",
-                        "driver": "pg",
-                        "schema": "public"
+                    development: {
+                        'user': 'postgres',
+                        'password': 'postgres',
+                        'database': 'ttrack',
+                        'port': '5432',
+                        'host': 'postgres',
+                        'driver': 'pg',
+                        'schema': 'public'
                     },
-                    test:{
+                    test: {
                         //connectionString: process.env.DATABASE_URL
-                        "user": "postgres",
-                        "password": "postgres",
-                        "database": "ttrack_test",
-                        "port": "5432",
-                        "host": "postgres",
-                        "driver": "pg",
-                        "schema": "public"
+                        'user': 'postgres',
+                        'password': 'postgres',
+                        'database': 'ttrack_test',
+                        'port': '5432',
+                        'host': 'postgres',
+                        'driver': 'pg',
+                        'schema': 'public'
                     },
                     production: {
-                        "user": "postgres",
-                        "password": "postgres",
-                        "database": "ttrack",
-                        "port": "5432",
-                        "host": "localhost",
-                        "driver": "pg",
-                        "schema": "public"
+                        'user': 'postgres',
+                        'password': 'postgres',
+                        'database': 'ttrack',
+                        'port': '5432',
+                        'host': 'localhost',
+                        'driver': 'pg',
+                        'schema': 'public'
                     }
                 }
             }
@@ -96,29 +96,30 @@ const manifest = {
             }
         },
         {
-            "plugin": {
-                'register': 'hapi-swagger',
-                'options': {
+            plugin: {
+                register: 'hapi-swagger',
+                options: {
                     tags: [{
-                        "name": "api",
-                        "description": "Public user calls"
+                        name: 'api',
+                        description: 'Public user calls'
                     }],
-                    "info": {
-                        "description": "This is the ttrack API",
-                        "version": "0.3.2",
-                        "title": "ttrack API",
-                        "contact": {
-                            "email": "ts@25th-floor.com",
+                    info: {
+                        description: 'This is the ttrack API',
+                        version: packageJson.version,
+                        title: 'ttrack API',
+                        contact: {
+                            email: 'ts@25th-floor.com',
                         },
-                        "license": {
-                            "name": "MIT",
-                            "url": "https://opensource.org/licenses/MIT"
+                        license: {
+                            name: 'MIT',
+                            url: 'https://opensource.org/licenses/MIT'
                         }
                     },
                     documentationPath: '/docs',
                 }
             }
-        },{
+        },
+        {
             plugin: {
                 register: 'good',
                 options: {
@@ -136,6 +137,16 @@ const manifest = {
                             args: [{ format: 'DD.MM.YYYY hh:mm:ss' }],
                         }, 'stdout']
                     }
+                }
+            }
+        },
+        {
+            plugin: {
+                register: 'hapi-api-version',
+                options: {
+                    validVersions: packageJson.ttrackServer.validVersions,
+                    defaultVersion: packageJson.ttrackServer.apiVersion,
+                    vendorName: 'ttrack'
                 }
             }
         }

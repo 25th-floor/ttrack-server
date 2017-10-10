@@ -25,7 +25,7 @@ module.exports.list = {
                     schema: Joi.object({
                         "apiVersion": Joi.number().example(1),
                         "buildNumber": Joi.number().example(42),
-                        "compatibleApiVersions": Joi.array().items(Joi.number()).example([1,2]),
+                        "validVersions": Joi.array().items(Joi.number()).example([1,2]),
                         "git": Joi.string().example('964aa95'),
                         "version": Joi.string().example('1.2.3'),
                     }),
@@ -43,7 +43,7 @@ module.exports.list = {
         reply({
             ...buildInfo,
             apiVersion: packageJson.ttrackServer.apiVersion,
-            compatibleApiVersions: packageJson.ttrackServer.compatibleApiVersions,
+            validVersions: packageJson.ttrackServer.validVersions,
             version: packageJson.version,
         });
     },
