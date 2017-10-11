@@ -1,9 +1,9 @@
 include docker/mk/*.mk
 
 # Define variables, export them and include them usage-documentation
-$(eval $(call defw,REPO,server))
-$(eval $(call defw,CI_BUILD_ID,latest))
-$(eval $(call defw,VERSION,${CI_BUILD_ID}))
+$(eval $(call defw,NS,twentyfifth))
+$(eval $(call defw,REPO,ttrack-server))
+$(eval $(call defw,VERSION,latest))
 $(eval $(call defw,NAME,ttrack))
 
 $(eval $(call defw,BUILD_NUMBER,null))
@@ -23,6 +23,10 @@ running_container := $(shell docker ps -a -f "name=ttrack" --format="{{.ID}}")
 # -----------------------------------------------------------------------------
 # Build and ship
 # -----------------------------------------------------------------------------
+
+.PHONY: ship
+ship:: ##@Docker Ship the image (build, ship)
+	docker push $(NS)/$(REPO):$(VERSION)
 
 # -----------------------------------------------------------------------------
 # All things deployment - beware
