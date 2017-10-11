@@ -6,6 +6,9 @@ $(eval $(call defw,CI_BUILD_ID,latest))
 $(eval $(call defw,VERSION,${CI_BUILD_ID}))
 $(eval $(call defw,NAME,ttrack))
 
+$(eval $(call defw,BUILD_NUMBER,null))
+$(eval $(call defw,GIT_COMMIT,null))
+
 $(eval $(call defw_h,UNAME_S,$(shell uname -s)))
 
 ifeq (Linux,$(UNAME_S))
@@ -44,6 +47,10 @@ shell: ##@Helpers Get a shell within the server container
 .PHONY: postgres
 postgres: ##@Helpers Get a shell within the server container
 	docker exec -ti ttrack-postgres bash
+
+.PHONY: buildinfo
+buildinfo:: ##@Helpers create the buildinfo json config
+	$(shell_env) echo '{"build": "$(BUILD_NUMBER)", "git": "$(GIT_COMMIT)"}' > ./buildinfo.json
 
 # -----------------------------------------------------------------------------
 # Local development & docker-compose
