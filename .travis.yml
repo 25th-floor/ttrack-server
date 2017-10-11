@@ -5,6 +5,7 @@ services:
 
 before_install:
   - sudo service postgresql stop
+  - echo '{"build": "$TRAVIS_BUILD_NUMBER", "git": "$TRAVIS_COMMIT"}' > ./buildinfo.json
   - make start
   - docker-compose -f docker-compose.dev.yml ps
   - wget --spider -S "http://localhost:8000/api/users/"
