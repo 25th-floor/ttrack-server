@@ -5,6 +5,7 @@ services:
 
 before_install:
   - sudo service postgresql stop
+  - make BUILD_NUBMER=$TRAVIS_BUILD_NUMBER GIT_COMMIT="$TRAVIS_COMMIT" buildinfo
   - make start
   - docker-compose -f docker-compose.dev.yml ps
   - wget --spider -S "http://localhost:8000/api/users/"
@@ -16,5 +17,5 @@ script:
 after_success:
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
     docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
-    docker push twentyfifth/ttrack-server;
+    make VERSION=$TRAVIS_BUILD_NUMBER ship;
     fi

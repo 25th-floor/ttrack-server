@@ -1,10 +1,13 @@
 include docker/mk/*.mk
 
 # Define variables, export them and include them usage-documentation
-$(eval $(call defw,REPO,server))
-$(eval $(call defw,CI_BUILD_ID,latest))
-$(eval $(call defw,VERSION,${CI_BUILD_ID}))
+$(eval $(call defw,NS,twentyfifth))
+$(eval $(call defw,REPO,ttrack-server))
+$(eval $(call defw,VERSION,latest))
 $(eval $(call defw,NAME,ttrack))
+
+$(eval $(call defw,BUILD_NUMBER,null))
+$(eval $(call defw,GIT_COMMIT,null))
 
 $(eval $(call defw_h,UNAME_S,$(shell uname -s)))
 
@@ -20,6 +23,10 @@ running_container := $(shell docker ps -a -f "name=ttrack" --format="{{.ID}}")
 # -----------------------------------------------------------------------------
 # Build and ship
 # -----------------------------------------------------------------------------
+
+.PHONY: ship
+ship:: ##@Docker Ship the image (build, ship)
+	docker push $(NS)/$(REPO):$(VERSION)
 
 # -----------------------------------------------------------------------------
 # All things deployment - beware
@@ -44,6 +51,10 @@ shell: ##@Helpers Get a shell within the server container
 .PHONY: postgres
 postgres: ##@Helpers Get a shell within the server container
 	docker exec -ti ttrack-postgres bash
+
+.PHONY: buildinfo
+buildinfo:: ##@Helpers create the buildinfo json config
+	$(shell_env) echo '{"build": "$(BUILD_NUMBER)", "git": "$(GIT_COMMIT)"}' > ./buildinfo.json
 
 # -----------------------------------------------------------------------------
 # Local development & docker-compose
