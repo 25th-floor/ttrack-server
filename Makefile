@@ -6,7 +6,6 @@ $(eval $(call defw,REPO,ttrack-server))
 $(eval $(call defw,VERSION,latest))
 $(eval $(call defw,NAME,ttrack))
 
-$(eval $(call defw,BUILD_NUMBER,null))
 $(eval $(call defw,GIT_COMMIT,null))
 
 $(eval $(call defw_h,UNAME_S,$(shell uname -s)))
@@ -23,6 +22,14 @@ running_container := $(shell docker ps -a -f "name=ttrack" --format="{{.ID}}")
 # -----------------------------------------------------------------------------
 # Build and ship
 # -----------------------------------------------------------------------------
+
+.PHONY: build
+build:: ##@Docker Build an image
+build:: buildinfo
+	$(shell_env) docker \
+		build \
+		-t $(NS)/$(REPO):$(VERSION) \
+		.
 
 .PHONY: ship
 ship:: ##@Docker Ship the image (build, ship)
@@ -54,7 +61,7 @@ postgres: ##@Helpers Get a shell within the server container
 
 .PHONY: buildinfo
 buildinfo:: ##@Helpers create the buildinfo json config
-	$(shell_env) echo '{"build": "$(BUILD_NUMBER)", "git": "$(GIT_COMMIT)"}' > ./buildinfo.json
+	$(shell_env) echo '{"build": "$(VERSION)", "git": "$(GIT_COMMIT)"}' > ./buildinfo.json
 
 # -----------------------------------------------------------------------------
 # Local development & docker-compose
@@ -71,8 +78,13 @@ start:: ##@Compose Start the whole development stack in detached mode
 	$(shell_env) docker-compose \
 		-f docker-compose.dev.yml \
 		up \
-		--build \
 		-d
+
+.PHONY: stop
+stop:: ##@Compose Start the whole development stack in detached mode
+	$(shell_env) docker-compose \
+		-f docker-compose.dev.yml \
+		stop
 
 .PHONY: rm
 rm:: ##@Compose Clean docker-compose stack
