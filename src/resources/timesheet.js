@@ -2,7 +2,7 @@ const _ = require('lodash')
     , moment = require('moment')
     , Q = require('q')
     , R = require('ramda')
-    , util = require('../common/util')
+    , holidayUtils = require('../utils/holidayUtils')
     , period = require('./period')
     , User = require('./user')
     , { query } = require('../pg');
@@ -185,7 +185,7 @@ async function createPeriod(user,holidayPeriodTypeId,{comment, date}){
  */
 async function createMissingHolidays(dateRange, user, userStart, existingHolidays, holidayPeriodTypeId) {
     const employmentEnd = moment(user.usr_employment_end);
-    const expectedHolidays = util.getHolidaysForDateRange(dateRange);
+    const expectedHolidays = holidayUtils.getHolidaysForDateRange(dateRange);
 
     const omitCreatedHolidays = R.filter(
         ({ date }) => !existingHolidays.some(holiday => moment(holiday.day_date).format('YYYY-MM-DD') === date)
