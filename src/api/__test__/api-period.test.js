@@ -7,7 +7,7 @@ import { PERIOD_TYPE_IDS, createPeriodStubWithDayForUserAndDate } from '../../co
 
 const relativeTo = path.join(__dirname, '../../');
 
-const dummyUserSql = 'INSERT INTO users (usr_firstname , usr_lastname, usr_email, usr_employment_start) VALUES ( $1, $2, $3, $4) RETURNING *';
+const createUserSql = 'SELECT * FROM create_user( $1, $2, $3, $4, $5)';
 
 const apiCreatePath = (user) => `/api/users/${user}/periods/`;
 const apiPutAndDeletePath = (user,per_id) => `/api/users/${user}/periods/${per_id}`;
@@ -37,14 +37,14 @@ describe('ttrack API',() => {
 
         let user;
         beforeAll(async (done) => {
-            user = await query(dummyUserSql,['Mister', 'Smith', 'mister@smith.com','2001-01-01']);
+            user = await query(createUserSql,['Mister', 'Smith', 'mister@smith.com','2001-01-01', '38:30:00']);
             user = R.head(user.rows);
-            //TODO impl test target = await query(targetTimeSql,[user.usr_id, '2001-02-01', 'infinity', '38:30:00']);
             done();
         });
 
         afterAll(async (done) => {
             await query(`DELETE FROM days WHERE day_usr_id = ${user.usr_id}`);
+            await query(`DELETE FROM user_target_times WHERE utt_usr_id = ${user.usr_id}`);
             await query(`DELETE FROM users WHERE usr_id = ${user.usr_id}`);
             done();
         });
@@ -412,7 +412,7 @@ describe('ttrack API',() => {
                 let anotherPeriod;
 
                 beforeAll(async (done) => {
-                    const result = await query(dummyUserSql,['Mister', 'Anderson', 'mister@anderson.com','2001-01-01']);
+                    const result = await query(createUserSql,['Mister', 'Anderson', 'mister@anderson.com','2001-01-01', '38:30:00']);
                     anotherUser = R.head(result.rows);
                     anotherPeriod = await createPeriodStubWithDayForUserAndDate(anotherUser.usr_id, date);
                     done();
@@ -420,6 +420,7 @@ describe('ttrack API',() => {
 
                 afterAll(async (done) => {
                     await query(`DELETE FROM days WHERE day_usr_id = ${anotherUser.usr_id}`);
+                    await query(`DELETE FROM user_target_times WHERE utt_usr_id = ${anotherUser.usr_id}`);
                     await query(`DELETE FROM users WHERE usr_id = ${anotherUser.usr_id}`);
                     done();
                 });

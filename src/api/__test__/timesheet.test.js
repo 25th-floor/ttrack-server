@@ -8,8 +8,7 @@ import moment from 'moment';
 
 const relativeTo = path.join(__dirname, '../../');
 
-const dummyUserSql = 'INSERT INTO users (usr_firstname , usr_lastname, usr_email, usr_employment_start) VALUES ( $1, $2, $3, $4) RETURNING *';
-const targetTimeSql = 'INSERT INTO user_target_times (utt_usr_id , utt_start, utt_end, utt_target_time) VALUES ( $1, $2, $3, $4 ) RETURNING *';
+const createUserSql = 'SELECT * FROM create_user( $1, $2, $3, $4, $5)';
 
 describe('Test TimeSheet functions', () => {
     let Server;
@@ -40,9 +39,8 @@ describe('Test TimeSheet functions', () => {
         };
 
         beforeAll(async (done) => {
-            user = await query(dummyUserSql, ['Mister', 'Smith', 'mister@smith.com', '2001-01-01']);
+            user = await query(createUserSql, ['Mister', 'Smith', 'mister@smith.com', '2001-01-01', '38:30:00']);
             user = R.head(user.rows);
-            await query(targetTimeSql,[user.usr_id, '2001-01-01', 'infinity', '38:30:00']);
             done();
         });
 
