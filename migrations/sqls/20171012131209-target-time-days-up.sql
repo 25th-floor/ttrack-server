@@ -117,3 +117,21 @@ BEGIN
   END;
 END
 $$;
+
+-- update create_user to use user_add_new_target_time
+CREATE OR REPLACE FUNCTION create_user (firstname TEXT, lastname TEXT, email TEXT, employment_start DATE, target INTERVAL)
+  RETURNS SETOF users
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  RETURN QUERY WITH inserted_user AS (
+    INSERT INTO users (usr_firstname, usr_lastname, usr_email, usr_employment_start)
+    VALUES (firstname, lastname, email, employment_start)
+    RETURNING *), inserted_target_time AS(
+    INSERT INTO user_target_times
+      SELECT usr_id, employment_start, 'infinity', target, ARRAY[target/5, target/5, target/5, target/5, target/5, '00:00:00'::INTERVAL, '00:00:00'::INTERVAL]
+      FROM inserted_user
+    RETURNING *)
+  SELECT * FROM inserted_user;
+END
+$$;
