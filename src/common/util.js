@@ -1,25 +1,6 @@
 /* eslint-disable no-continue*/
 const moment = require('moment');
 
-/**
- * returns the first and last day of a given date
- *
- * @param d
- * @returns {{start: Date, end: Date}}
- */
-function calculateFirstLastDayOfMonth(d) {
-    const date = new Date(d);
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = moment(new Date(year, month, 1));
-    firstDay.subtract(parseInt(firstDay.format('E'), 10) - 1, 'day');
-
-    const lastDay = moment(new Date(year, month + 1, 0));
-    lastDay.add(7 - parseInt(lastDay.format('E'), 10), 'day');
-
-    return { start: firstDay.toDate(), end: lastDay.toDate() };
-}
-
 function getHolidaysForDateRange(dateRange) {
     const holidays = [];
     const start = moment(dateRange.start);
@@ -114,18 +95,7 @@ function padout(number) {
     return (number < 10) ? `0${number}` : number;
 }
 
-// use timeUtils:getDayDuration DUPLICATES!!
-function getDayDuration(duration) {
-    const week = duration.asMinutes();
-    return moment.duration(Math.round(week / 5), 'minutes');
-}
-function getHalfDayDuration(duration) {
-    const week = duration.asMinutes();
-    return moment.duration(Math.round(week / 10), 'minutes');
-}
 
-exports.calculateFirstLastDayOfMonth = calculateFirstLastDayOfMonth;
-exports.getHolidaysForDateRange = getHolidaysForDateRange;
-
-exports.getDayDuration = getDayDuration;
-exports.getHalfDayDuration = getHalfDayDuration;
+module.exports = {
+    getHolidaysForDateRange,
+};
