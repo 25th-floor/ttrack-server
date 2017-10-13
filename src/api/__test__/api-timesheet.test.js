@@ -64,6 +64,14 @@ describe('ttrack API', () => {
                 expect(response.statusCode).toBe(404);
             });
 
+            it('should return 404 with if it is before the user started', async () => {
+                const response = await Server.inject({
+                    method: 'GET',
+                    url: apiPath(user.usr_id, '2000-02-01', '2000-03-01')
+                });
+                expect(response.statusCode).toBe(404);
+            });
+
             it("should return the carry information", async () => {
                 const response = await Server.inject({
                     method: 'GET',

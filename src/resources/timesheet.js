@@ -230,6 +230,12 @@ async function getTimesheetForTimeRange(user, dateRange) {
     const userId = user.usr_id;
     // don't start with range start, but 1 day before for carry data calculation
     const carryStart = moment(dateRange.start);
+
+    // if carryStart begins before the user started it's wrong
+    if (carryStart.isBefore(moment(user.usr_employment_start))) {
+        return false;
+    }
+
     carryStart.subtract(1, 'days');
 
     // CREATE HOLIDAYS
