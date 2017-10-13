@@ -64,47 +64,52 @@ BEGIN
   BEGIN
     -- get old target time
     SELECT utt_target_time
-    INTO STRICT old_target
+    INTO old_target
     FROM user_target_times
     WHERE utt_usr_id = id
           AND utt_end = 'infinity'
           AND TSRANGE(utt_start, utt_end, '[)') @> startdate::TIMESTAMP;
 
-    -- first end the active one
-    UPDATE user_target_times
-    SET utt_end = startdate
-    WHERE utt_usr_id = id
-          AND utt_end = 'infinity'
-          AND TSRANGE(utt_start, utt_end, '[)') @> startdate::TIMESTAMP;
+    -- if old target time is found, stop it correctly
+    IF old_target IS NOT NULL THEN
+      -- first end the active one
+      UPDATE user_target_times
+      SET utt_end = startdate
+      WHERE utt_usr_id = id
+            AND utt_end = 'infinity'
+            AND TSRANGE(utt_start, utt_end, '[)') @> startdate::TIMESTAMP;
+    END IF;
 
     -- now create a new one
     INSERT INTO user_target_times VALUES
       (id, startdate, 'infinity', target, ARRAY[target/5, target/5, target/5, target/5, target/5, '00:00:00'::INTERVAL, '00:00:00'::INTERVAL]);
 
-    -- update days
-    -- update full days
-    UPDATE days SET day_target_time = target/5 WHERE day_usr_id = id AND day_date >= startdate AND day_target_time = old_target/5;
-    -- update half days
-    UPDATE days SET day_target_time = target/10 WHERE day_usr_id = id AND day_date >= startdate AND day_target_time = old_target/10;
+    -- update days if old_target is present, therefore there are targets to update
+    IF old_target IS NOT NULL THEN
+      -- update full days
+      UPDATE days SET day_target_time = target/5 WHERE day_usr_id = id AND day_date >= startdate AND day_target_time = old_target/5;
+      -- update half days
+      UPDATE days SET day_target_time = target/10 WHERE day_usr_id = id AND day_date >= startdate AND day_target_time = old_target/10;
 
-    -- update periods?
-    -- update full periods
-    UPDATE periods SET per_duration = target/5
-    FROM days
-    WHERE day_id = per_day_id
-          AND day_usr_id = id
-          AND day_date >= startdate
-          AND per_pty_id IN ('Vacation', 'Sick', 'Nursing', 'Holiday')
-          AND per_duration = old_target/5;
+      -- update periods?
+      -- update full periods
+      UPDATE periods SET per_duration = target/5
+      FROM days
+      WHERE day_id = per_day_id
+            AND day_usr_id = id
+            AND day_date >= startdate
+            AND per_pty_id IN ('Vacation', 'Sick', 'Nursing', 'Holiday')
+            AND per_duration = old_target/5;
 
-    -- update half day periods
-    UPDATE periods SET per_duration = target/10
-    FROM days
-    WHERE day_id = per_day_id
-          AND day_usr_id = id
-          AND day_date >= startdate
-          AND per_pty_id IN ('Vacation', 'Sick', 'Nursing', 'Holiday')
-          AND per_duration = old_target/10;
+      -- update half day periods
+      UPDATE periods SET per_duration = target/10
+      FROM days
+      WHERE day_id = per_day_id
+            AND day_usr_id = id
+            AND day_date >= startdate
+            AND per_pty_id IN ('Vacation', 'Sick', 'Nursing', 'Holiday')
+            AND per_duration = old_target/10;
+    END IF;
 
     EXCEPTION
     WHEN NO_DATA_FOUND THEN
