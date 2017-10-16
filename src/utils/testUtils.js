@@ -34,24 +34,6 @@ async function createEntity(table, entity) {
     return rows[0];
 }
 
-export async function createUser(user) {
-    return await createEntity('users', user);
-}
-
-export async function createUserWithTargetTime(userData, targetTime, targetStart) {
-    const user = await createUser(userData);
-    const target = await createEntity(
-        'user_target_times',
-        {
-            utt_usr_id: user.usr_id,
-            utt_start: targetStart,
-            utt_end: 'infinity',
-            utt_target_time: targetTime,
-        },
-    );
-    return { user, target };
-}
-
 export async function createDay(day) {
     return await createEntity('days', day);
 }
