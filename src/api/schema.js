@@ -94,11 +94,13 @@ const PostPeriod = Joi.object({
     per_start: DateTime.required(),
     per_duration: DateTime,
     per_stop: DateTime,
-    per_break: DateTime,
+    per_break: DateTime.allow(null),
     type: PeriodType,
     duration: Joi.string().example('period'),
     per_comment: Joi
         .string()
+        .allow(null)
+        .allow("")
         .example('My awesome comment for the day')
         .description("a comment field for the user to add comments to a period"),
 }).label('Post Period');

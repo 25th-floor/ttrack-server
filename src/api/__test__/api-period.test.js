@@ -124,13 +124,14 @@ describe('ttrack API',() => {
                     method: 'POST',
                     payload: {
                         "per_pty_id": "Work",
+                        "per_comment": null,
                         "per_start": "PT8H",
                         "per_stop": "PT10H",
                         "date": "2001-01-02",
                     },
                     url: apiCreatePath(user.usr_id)
                 });
-
+                
                 expect(response.statusCode).toBe(201);
                 expect(response.result).toMatchObject({
                     "per_break": null,
