@@ -3,7 +3,7 @@ import path from 'path';
 import R from 'ramda';
 import { query } from '../../pg';
 import manifest from '../../config/manifest'; 
-import { PERIOD_TYPE_IDS, createPeriodStubWithDayForUserAndDate } from '../../common/testUtils';
+import { PERIOD_TYPE_IDS, createPeriodStubWithDayForUserAndDate } from '../../utils/testUtils';
 
 const relativeTo = path.join(__dirname, '../../');
 

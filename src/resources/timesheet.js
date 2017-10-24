@@ -1,11 +1,12 @@
-const _ = require('lodash')
-    , moment = require('moment')
-    , Q = require('q')
-    , R = require('ramda')
-    , util = require('../common/util')
-    , period = require('./period')
-    , User = require('./user')
-    , { query } = require('../pg');
+const _ = require('lodash');
+const moment = require('moment');
+const Q = require('q');
+const R = require('ramda');
+const holidayUtils = require('../utils/holidayUtils');
+const period = require('./period');
+const User = require('./user');
+const { query } = require('../pg');
+const { getValidDateRange } = require('../utils/dateUtils');
 
 function fmtDayDate(row) {
     return moment(row.day_date).format('YYYY-MM-DD');
@@ -25,7 +26,7 @@ function hasKeyPrefix(prefix) {
  */
 function fetchPeriodsGroupedByDay(userId, dateRange, periodTypes) {
     const periodQuery = 'SELECT * FROM user_get_day_periods($1, $2::timestamp, $3::timestamp)';
-    return query(periodQuery, [userId, dateRange.start.toISOString(), dateRange.end.toISOString()])
+    return query(periodQuery, [userId, dateRange.start, dateRange.end])
         .then((result) => {
             const grouped = _.groupBy(result.rows, fmtDayDate);
             const data = _.mapValues(grouped, (periods) => {
@@ -93,7 +94,7 @@ function fetchPeriodsGroupedByDay(userId, dateRange, periodTypes) {
  * @returns {*}
  */
 function calculateCarryData(user, until) {
-    const sql = 'SELECT * FROM user_calculate_carry_time($1, $2::DATE)';
+    const sql = 'SELECT * FROM user_calculate_carry_time($1, $2)';
     return query(sql, [user.usr_id, until])
         .then((result) => {
             const carryData = {
@@ -179,24 +180,17 @@ async function createPeriod(user,holidayPeriodTypeId,{comment, date}){
  * Create missing holidays in db
  * @param {object} dateRange 
  * @param {object} user 
- * @param {userStart} userStart 
- * @param {array(object)} existingHolidays Contains periods 
+ * @param {array(object)} existingHolidays Contains periods
  * @param {string} holidayPeriodTypeId contains the type of period
  */
-async function createMissingHolidays(dateRange, user, userStart, existingHolidays, holidayPeriodTypeId) {
-    const employmentEnd = moment(user.usr_employment_end);
-    const expectedHolidays = util.getHolidaysForDateRange(dateRange);
+async function createMissingHolidays(dateRange, user, existingHolidays, holidayPeriodTypeId) {
+    const expectedHolidays = holidayUtils.getHolidaysForDateRange(dateRange);
 
     const omitCreatedHolidays = R.filter(
         ({ date }) => !existingHolidays.some(holiday => moment(holiday.day_date).format('YYYY-MM-DD') === date)
     );
 
-    const omitEmploymentEnd = R.filter(
-        ({ date }) =>  !(moment(date).isBefore(userStart) || moment(date).isAfter(employmentEnd))
-    );
-
     const newHolidays = R.compose(
-        omitEmploymentEnd,
         omitCreatedHolidays,
     )(expectedHolidays);
 
@@ -213,11 +207,10 @@ async function createMissingHolidays(dateRange, user, userStart, existingHoliday
  */
 async function holidayControlFlow(user, dateRange){
     const userId = user.usr_id;
-    const userStart = await User.getStartDate(userId);
     const existingHolidays = await fetchHolidays(userId, dateRange);
     const holidayPeriodTypeId = await fetchHolidayPeriodTypeId();
 
-    const createdHolidays = await createMissingHolidays(dateRange, user, userStart, existingHolidays, holidayPeriodTypeId);
+    const createdHolidays = await createMissingHolidays(dateRange, user, existingHolidays, holidayPeriodTypeId);
     return createdHolidays;
 }
 
@@ -228,23 +221,27 @@ async function holidayControlFlow(user, dateRange){
  */
 async function getTimesheetForTimeRange(user, dateRange) {
     const userId = user.usr_id;
+
+    const startDate = await User.getStartDate(userId);
+    const validDateRange = getValidDateRange(startDate, user.usr_employment_end, dateRange);
+    if (validDateRange === null) {
+        return false;
+    }
+
     // don't start with range start, but 1 day before for carry data calculation
-    const carryStart = moment(dateRange.start);
-    carryStart.subtract(1, 'days');
+    const carryStart = moment(validDateRange.start); //? dateRange
+    carryStart.subtract(1, 'days'); //? validDateRange
 
     // CREATE HOLIDAYS
-    await holidayControlFlow(user, dateRange);
+    await holidayControlFlow(user, validDateRange);
 
     const carryData = await calculateCarryData(user, carryStart.toDate());
     const periodTypes = await fetchPeriodTypes();
-    const timesheet = await fetchPeriodsGroupedByDay(userId, dateRange, periodTypes);
+    const timesheet = await fetchPeriodsGroupedByDay(userId, validDateRange, periodTypes);
 
     return {
         ...timesheet,
-        carryTime: carryData.carryTime,
-        // debug information, so we know in which timeframe the carryTime was calculated
-        carryFrom: carryData.carryFrom,
-        carryTo: carryData.carryTo,
+        ...carryData,
     };
 }
 

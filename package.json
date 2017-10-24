@@ -1,6 +1,6 @@
 {
   "name": "ttrack-server",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Another TimeTracking Tool",
   "author": "25th floor",
   "license": "MIT",
@@ -40,6 +40,7 @@
     "ramda": "^0.24.1",
     "sql": "^0.76.1",
     "sql-formatter": "^2.0.0",
+    "twix": "^1.2.1",
     "vision": "^4.1.1"
   },
   "devDependencies": {

@@ -37,6 +37,7 @@ describe('ttrack API', () => {
         beforeAll(async (done) => {
             user = await query(createUserSql, ['Mister', 'Smith', 'mister@smith.com', '2001-01-01', '38:30:00']);
             user = R.head(user.rows);
+            await query('UPDATE users SET usr_employment_end = $2 WHERE usr_id = $1', [user.usr_id, '2001-12-31']);
             done();
         });
 
@@ -60,6 +61,14 @@ describe('ttrack API', () => {
                 const response = await Server.inject({
                     method: 'GET',
                     url: apiPath(0, '2001-02-01', '2001-03-01')
+                });
+                expect(response.statusCode).toBe(404);
+            });
+
+            it('should return 404 if it is before the user started', async () => {
+                const response = await Server.inject({
+                    method: 'GET',
+                    url: apiPath(user.usr_id, '2000-02-01', '2000-03-01')
                 });
                 expect(response.statusCode).toBe(404);
             });
@@ -113,6 +122,43 @@ describe('ttrack API', () => {
                     },
                 });
             });
+
+            it('should return 404 if it is after the user ended', async () => {
+                const response = await Server.inject({
+                    method: 'GET',
+                    url: apiPath(user.usr_id, '2002-02-01', '2002-03-01')
+                });
+                expect(response.statusCode).toBe(404);
+            });
+
+            it('should return 10 days with startdate before user started', async () => {
+                const response = await Server.inject({
+                    method: 'GET',
+                    url: apiPath(user.usr_id, '2000-12-01', '2001-01-10')
+                });
+                expect(response.statusCode).toBe(200);
+                expect(response.result.days.length).toBe(10);
+                expect(response.result).toMatchObject({
+                    carryTime: { },
+                    carryFrom: "2000-12-31T00:00:00.000Z",
+                    carryTo: "2000-12-31T00:00:00.000Z",
+                });
+            });
+
+            it('should return 10 days with enddate after user started', async () => {
+                const response = await Server.inject({
+                    method: 'GET',
+                    url: apiPath(user.usr_id, '2001-12-22', '2002-01-31')
+                });
+                expect(response.statusCode).toBe(200);
+                expect(response.result.days.length).toBe(10);
+                expect(response.result).toMatchObject({
+                    carryTime: { hours: -1955, minutes: -48 },
+                    carryFrom: "2001-01-01T00:00:00.000Z",
+                    carryTo: "2001-12-21T00:00:00.000Z",
+                });
+            });
+
         });
 
         describe('Test Method not implemented', () => {
