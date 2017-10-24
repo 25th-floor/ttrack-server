@@ -6,7 +6,7 @@ const User = require('./handlers/user')
 exports.register = (plugin, options, next) => {
     plugin.route([
         // User
-        { method: 'GET' , path: '/users', config: User.list },
+        { method: 'GET', path: '/users', config: User.list },
         { method: 'GET' , path: '/users/{id}', config: User.findById },
 
         // Timesheet

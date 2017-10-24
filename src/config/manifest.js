@@ -91,6 +91,7 @@ const manifest = {
             plugin: {
                 register: 'hapi-405-routes',
                 options: {
+                    methodsToSupport: ['GET', 'POST', 'DELETE', 'PUT', 'PATCH', 'TRACE'],
                     setAllowHeader: true,
                 }
             }
