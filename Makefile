@@ -1,7 +1,7 @@
 include docker/mk/*.mk
 
 # Define variables, export them and include them usage-documentation
-$(eval $(call defw,NS,twentyfifth))
+$(eval $(call defw,NS,25thfloor))
 $(eval $(call defw,REPO,ttrack-server))
 $(eval $(call defw,VERSION,latest))
 $(eval $(call defw,NAME,ttrack))
