@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+: "${DB_HOST:?Must be set}"
+: "${DB_PORT:=5432}"
+
 NC=`which nc`
 NC_HOST=$DB_HOST
 NC_PORT=$DB_PORT
