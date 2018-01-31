@@ -14,6 +14,12 @@ function initializeConnection(server, next){
             connectionString: process.env.DATABASE_URL
         };
     }
+
+    // log connection to log for debug purposes
+    const connectionString = config.connectionString
+        || `${config.driver}, ${config.user}:${config.password}@${config.host}:${config.port}/${config.database}/${config.schema}`;
+    server.log(`✅  Database is Configured on ${connectionString}`);
+
     pool = new Pool(config);
     Server = server;
     pool.on('error', (err, client) => {
