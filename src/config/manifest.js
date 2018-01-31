@@ -22,6 +22,16 @@ const envKey = key => {
     return configuration[env][key];
 };
 
+const databaseConfig = {
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || 'postgres',
+    database: process.env.DB_DATABASE || 'ttrack',
+    port: process.env.DB_PORT || '5432',
+    host: process.env.DB_HOST || 'postgres',
+    driver: process.env.DB_DRIVER || 'pg',
+    schema: process.env.DB_SCHEMA || 'public'
+};
+
 const manifest = {
     connections: [
         {
@@ -51,32 +61,14 @@ const manifest = {
                 register: './pg',
                 options: {
                     development: {
-                        'user': 'postgres',
-                        'password': 'postgres',
-                        'database': 'ttrack',
-                        'port': '5432',
-                        'host': 'postgres',
-                        'driver': 'pg',
-                        'schema': 'public'
+                        ...databaseConfig,
                     },
                     test: {
-                        //connectionString: process.env.DATABASE_URL
-                        'user': 'postgres',
-                        'password': 'postgres',
+                        ...databaseConfig,
                         'database': 'ttrack_test',
-                        'port': '5432',
-                        'host': 'postgres',
-                        'driver': 'pg',
-                        'schema': 'public'
                     },
                     production: {
-                        'user': 'postgres',
-                        'password': 'postgres',
-                        'database': 'ttrack',
-                        'port': '5432',
-                        'host': 'localhost',
-                        'driver': 'pg',
-                        'schema': 'public'
+                        ...databaseConfig,
                     }
                 }
             }
@@ -84,7 +76,7 @@ const manifest = {
         {
             plugin: './api',
             options: {
-                routes: { prefix: '/api' }
+                routes: {prefix: '/api'}
             }
         },
         {
@@ -135,7 +127,7 @@ const manifest = {
                             }]
                         }, {
                             module: 'good-console',
-                            args: [{ format: 'DD.MM.YYYY hh:mm:ss' }],
+                            args: [{format: 'DD.MM.YYYY hh:mm:ss'}],
                         }, 'stdout']
                     }
                 }
