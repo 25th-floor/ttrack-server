@@ -33,7 +33,13 @@ build:: buildinfo
 
 .PHONY: ship
 ship:: ##@Docker Ship the image (build, ship)
+ship:: ship-latest
 	docker push $(NS)/$(REPO):$(VERSION)
+
+.PHONY: ship-latest
+ship-latest:: ##@Docker also ship the image with tagged version latest
+	docker tag $(NS)/$(REPO):$(VERSION) $(NS)/$(REPO):latest
+	docker push $(NS)/$(REPO):latest
 
 # -----------------------------------------------------------------------------
 # All things deployment - beware
