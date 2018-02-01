@@ -1,4 +1,9 @@
 #!/bin/bash
 set -e
-echo "START SERVER"
-yarn start
+if [[ $NODE_ENV == "development" ]]; then
+    echo "START SERVER in DEVELOPMENT"
+    yarn start
+else
+    echo "START SERVER in PRODUCTION"
+    yarn start:production
+fi
