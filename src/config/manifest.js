@@ -14,8 +14,8 @@ const envKey = key => {
         },
         // These should match environment variables on hosted server
         production: {
-            host: process.env.HOST,
-            port: process.env.PORT
+            host: process.env.HOST || '0.0.0.0',
+            port: process.env.PORT || 8000
         }
     };
 

@@ -33,7 +33,28 @@ To test the server code you need a running development environment, therefor you
 Then just calling `make yarn test` will run the tests using yarn in the server container.
 
 ### Production
-TBC3
+
+The Docker Image is located at https://hub.docker.com/r/25thfloor/ttrack-server.
+
+It needs a running Database and can be configured using environment variables.
+
+The needed variables are:
+* DB_HOST: `your database hostname`
+* DB_DATABASE: `your database name`
+* DB_USER: `your database user`
+* DB_PASSWORD: `your password`
+
+Additional there are some optional ones too:
+* NODE_ENV: `production`
+* HOST: `0.0.0.0`
+* PORT: `8000`
+* DB_DRIVER: `pg`
+* DB_PORT: `5432`
+* DB_SCHEMA: `public`
+
+One more thing, Sentry has been prepared so if you want to use it you just need to add your token as environment variable.
+If you don't use sentry then just ignore the environment variable.
+* SENTRY_TOKEN: `your sentry token`
 
 ## Documentation
 ### API
