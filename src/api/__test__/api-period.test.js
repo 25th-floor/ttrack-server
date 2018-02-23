@@ -213,6 +213,30 @@ describe('ttrack API',() => {
                     }
                 });
             });
+
+            it("should work with fullday duration", async () => {
+                const response  = await Server.inject({
+                    method: 'POST',
+                    payload: {
+                        "date": "2001-01-01",
+                        "per_pty_id": "Sick",
+                        "per_duration": "PT7H42M",
+                        "per_start": null,
+                        "per_stop": null,
+                    },
+                    url: apiCreatePath(user.usr_id)
+                });
+
+                expect(response.statusCode).toBe(201);
+                expect(response.result).toMatchObject({
+                    "per_pty_id": "Sick",
+                    "per_start": null,
+                    "per_stop": null,
+                    "per_break": null,
+                    "per_comment": null,
+                    "per_duration": { "hours" : 7, "minutes": 42 },
+                });
+            });
         });
 
         describe("testing available PeriodTypes", () => {
@@ -364,7 +388,7 @@ describe('ttrack API',() => {
                 });
             });
 
-            // per_day_id is not allowd ?? 
+            // per_day_id is not allowd ??
             it("day id should not be changed", async () => {
                 const payload = {
                     date,
