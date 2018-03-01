@@ -15,7 +15,7 @@ script:
   - make yarn test
 
 after_success:
-  - if [ "$TRAVIS_BRANCH" == "master" ]; then
+  - if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
     docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
     make VERSION=$TRAVIS_BUILD_NUMBER ship;
     fi
