@@ -1,6 +1,6 @@
 # TTrack Server
 
-[![Build Status](https://travis-ci.org/25th-floor/ttrack-server.svg?branch=master)](https://travis-ci.org/25th-floor/ttrack)
+[![Build Status](https://travis-ci.org/25th-floor/ttrack-server.svg?branch=master)](https://travis-ci.org/25th-floor/ttrack-server)
 
 A node Time Tracking application server. Needs a Postgres Database and a client.
 
