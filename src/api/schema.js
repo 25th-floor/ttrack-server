@@ -1,13 +1,17 @@
+const moment = require('moment');
 const BaseJoi = require('joi');
 const Extension = require('joi-date-extensions');
-const Joi = BaseJoi.extend(Extension);
+const DurationExtension = require('../utils/durationextension');
+
+let Joi = BaseJoi.extend(Extension);
+Joi = Joi.extend(DurationExtension);
 
 const DateTime = Joi.alternatives().try(
     Joi.object({
-        "hours": Joi.number().example('12'),
-        "minutes": Joi.number().example('33'),
+        "hours": Joi.number().min(0).max(24).example('12'),
+        "minutes": Joi.number().min(0).max(60).example('33'),
     }),
-    Joi.string().example('PT8H').description('moment interval')
+    Joi.duration().maxHours(24).example('PT8H').description('moment interval')
 );
 
 module.exports.DateTime = DateTime;
