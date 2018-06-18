@@ -22,7 +22,7 @@
     ]
   },
   "dependencies": {
-    "blipp": "^2.3.0",
+    "blipp": "^3.0.0",
     "db-migrate": "^0.10.0-beta.20",
     "db-migrate-pg": "^0.2.4",
     "glue": "^4.1.0",
