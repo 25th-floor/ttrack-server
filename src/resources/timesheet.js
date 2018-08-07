@@ -1,4 +1,3 @@
-const _ = require('lodash');
 const moment = require('moment');
 const Q = require('q');
 const R = require('ramda');
@@ -13,7 +12,7 @@ function fmtDayDate(row) {
 }
 
 function hasKeyPrefix(prefix) {
-    return (value, key) => _.startsWith(key, prefix);
+    return (value, key) => R.startsWith(prefix, key);
 }
 
 /**
@@ -28,14 +27,14 @@ function fetchPeriodsGroupedByDay(userId, dateRange, periodTypes) {
     const periodQuery = 'SELECT * FROM user_get_day_periods($1, $2::timestamp, $3::timestamp)';
     return query(periodQuery, [userId, dateRange.start, dateRange.end])
         .then((result) => {
-            const grouped = _.groupBy(result.rows, fmtDayDate);
-            const data = _.mapValues(grouped, (periods) => {
+            const grouped = R.groupBy(fmtDayDate, result.rows);
+            const data = R.map((periods) => {
                 // pick day fields from first period in list to get all props for the day
-                const day = _.pickBy(_.head(periods), hasKeyPrefix('day_'));
+                const day = R.pickBy(hasKeyPrefix('day_'), R.head(periods));
 
                 function transformPeriod(d) {
                     // only pick props that *do not* have a "day_" prefix
-                    const periodData = _.omitBy(d, hasKeyPrefix('day_'));
+                    const periodData = R.pickBy(R.pipe(hasKeyPrefix('day_'), R.not), d);
                     return period.preparePeriodForApiResponse(periodData);
                 }
 
@@ -43,11 +42,10 @@ function fetchPeriodsGroupedByDay(userId, dateRange, periodTypes) {
                 const p = periods.map(transformPeriod).filter(pe => pe.per_id !== null);
 
                 function calculateRemaining() {
-                    const duration = _.reduce(
-                        periods,
+                    const duration = periods.reduce(
                         (res, per) => {
                             // map period type to period
-                            const type = _.find(periodTypes, t => t.pty_id === per.per_pty_id);
+                            const type = R.find(t => t.pty_id === per.per_pty_id, periodTypes);
 
                             if (!type || type.pty_id === 'Work') {
                                 return res;
@@ -78,9 +76,9 @@ function fetchPeriodsGroupedByDay(userId, dateRange, periodTypes) {
                         remaining: calculateRemaining(),
                     }
                 );
-            });
+            }, grouped);
             return {
-                days: _.sortBy(_.values(data), day => moment(day.day_date)), // todo should not the database do this?
+                days: R.sortBy(day => moment(day.day_date), R.values(data)), // todo should not the database do this?
             };
         });
 }
@@ -139,7 +137,7 @@ function fetchHolidays(userId, dateRange) {
             "days"."day_date" BETWEEN $3 AND $4
         )
     )`;
-    return query(holidayQuery,[userId, 'Feiertag', dateRange.start, dateRange.end ]).then(_.property('rows'));
+    return query(holidayQuery,[userId, 'Feiertag', dateRange.start, dateRange.end ]).then(R.prop('rows'));
 }
 
 function fetchHolidayPeriodTypeId() {
@@ -155,10 +153,10 @@ function fetchHolidayPeriodTypeId() {
         .then(result => result.rows[0].pty_id);
 }
 
-function fetchPeriodTypes() {
+async function fetchPeriodTypes() {
     const periodTypeQuery = 'SELECT * FROM period_types';
-    return query(periodTypeQuery)
-        .then(_.property('rows'));
+    const result = await query(periodTypeQuery);
+    return result.rows;
 }
 
 async function createPeriod(user,holidayPeriodTypeId,{comment, date}){
