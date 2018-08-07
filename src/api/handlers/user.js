@@ -32,9 +32,8 @@ module.exports.list = {
             },
         },
     },
-    handler: async function (request) {
-        const list = await UserResources.list();
-        return list;
+    handler: async function () {
+        return await UserResources.list();
     },
 };
 

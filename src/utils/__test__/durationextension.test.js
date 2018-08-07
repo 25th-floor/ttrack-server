@@ -10,6 +10,6 @@ describe('Duration extension',()=>{
         expect( 
             v.error.toString() 
         ).toEqual("ValidationError: \"value\" Duration of Hours should respect the maximal value of 22'");
-        expect(v.value).toBe(durationString)
+        expect(v.value).toBe(durationString);
     });
 });
