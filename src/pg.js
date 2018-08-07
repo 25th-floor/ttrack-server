@@ -8,7 +8,7 @@ let pool;
 let Server;
 //let counter = 0;
 
-function initializeConnection(server, next){
+async function initializeConnection(server){
     if(process.env.DATABASE_URL){
         config = {
             connectionString: process.env.DATABASE_URL
@@ -26,12 +26,10 @@ function initializeConnection(server, next){
         console.error('Unexpected error on idle client', client, err);
         process.exit(-1);
     });
-    next();
 }
 
-async function closeConnection(server, next){
+async function closeConnection(){
     await pool.end();
-    next();
 }
 
 async function query(SQL, args) {
@@ -50,14 +48,12 @@ exports.getClient = async function() {
 
 exports.query = query;
 
-exports.register = function(server, options, next) {
-    config = options[env];
-    server.ext('onPreStart', initializeConnection);
-    server.ext('onPreStop', closeConnection);
-    next();
-};
-
-exports.register.attributes = {
+exports.plugin = {
     name: 'test',
-    version: '1.0.0'
+    version: '1.0.0',
+    register: async function(server, options) {
+        config = options[env];
+        server.ext('onPreStart', initializeConnection);
+        server.ext('onPreStop', closeConnection);
+    },
 };

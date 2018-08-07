@@ -1,13 +1,20 @@
 const BaseJoi = require('joi');
 const Extension = require('joi-date-extensions');
 
-const packageJson = require('../../../package.json');
+const appRoot = require('app-root-path');
+const {
+    version, 
+    ttrackServer: {
+        apiVersion = 1,
+        validVersions = [1],
+    } 
+} = require(`${appRoot}/package.json`);
 
 const Joi = BaseJoi.extend(Extension);
 
 let buildInfo;
 try {
-    buildInfo = require('../../../buildinfo.json');
+    buildInfo = require(`${appRoot}/buildinfo.json`);
 } catch (e) {
     buildInfo = {};
 }
@@ -39,12 +46,10 @@ module.exports.list = {
             },
         },
     },
-    handler: async function (request, reply) {
-        reply({
-            ...buildInfo,
-            apiVersion: packageJson.ttrackServer.apiVersion,
-            validVersions: packageJson.ttrackServer.validVersions,
-            version: packageJson.version,
-        });
-    },
+    handler: () => ({
+        ...buildInfo,
+        apiVersion,
+        validVersions,
+        version,
+    }),
 };

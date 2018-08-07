@@ -19,10 +19,8 @@ module.exports.list = {
             },
         },
     },
-    handler: function (request, reply) {
-        return Period.list()
-            .then(
-                success => reply(success.rows),
-            );
+    handler: async function () {
+        const list = await Period.list();
+        return list.rows;
     }
 };

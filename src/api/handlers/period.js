@@ -34,13 +34,14 @@ module.exports.create = {
             userId: UserId.required(),
         }
     },
-    handler: function (request, reply){
+    handler: async function (request, header){
         const data = request.payload;
         const { userId } = request.params;
         request.server.log(['Info'],[`API POST Request for Period for user ${userId}`,data]);
-        return PeriodResources
-            .post(userId, { ...data, userId })
-            .then(period => reply(period).code(201));
+        const period = await PeriodResources.post(userId, { ...data, userId });
+        return header
+            .code(201)
+            .response(period);
     }
 };
 
@@ -72,19 +73,18 @@ module.exports.update = {
             per_id: PeriodId.required(),
         }
     },
-    handler: async function (request, reply){
+    handler: async function (request){
         const data = request.payload;
         const { userId, per_id } = request.params;
         request.server.log(['Info',[`API PUT Request for Period ${per_id} for user ${userId}`,data]]);
         // validate if user has this period
         const period = await PeriodResources.get(per_id, userId);
         if (!period || R.isEmpty(period)) {
-            return reply(Boom.create(404, `Could not find period with id '${per_id}'`));
+            return Boom.create(404, `Could not find period with id '${per_id}'`);
         }
 
-        return PeriodResources
-            .put(userId, { ...data, userId, per_id })
-            .then(period => reply(period));
+        const updated = await PeriodResources.put(userId, { ...data, userId, per_id });
+        return updated;
     }
 };
 
@@ -110,16 +110,13 @@ module.exports.delete = {
             per_id: PeriodId.required(),
         }
     },
-    handler: function (request, reply){
+    handler: async function (request, header){
         const { userId, per_id } = request.params;
         request.server.log(['Info'],[` API PUT DELETE for Period ${per_id} for user ${userId}`]);
-        return PeriodResources
-            .delete(per_id, userId)
-            .then(
-                (res) => {
-                    if(!res) return reply(Boom.create(404, `Could not find period with id '${per_id} for user ${userId}'`));
-                    return reply().code(204);
-                }
-            );
+        const res = await PeriodResources.delete(per_id, userId);
+
+        if(!res) return Boom.create(404, `Could not find period with id '${per_id} for user ${userId}'`);
+        
+        return header.code(204);
     }
 };

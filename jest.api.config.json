@@ -1,0 +1,8 @@
+{
+    "verbose": true,
+    "bail": true,
+    "testRegex": "/*(.test.api.js)",
+    "testEnvironment": "node",
+    "globalSetup": "./globalSetup.js",
+    "globalTeardown": "./globalTeardown.js"
+}

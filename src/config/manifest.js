@@ -1,8 +1,11 @@
-const packageJson = require('../../package.json');
+const appRoot = require('app-root-path');
+const {
+    version,
+    ttrackServer
+} = require(`${appRoot}/package.json`);
 
 const envKey = key => {
     const env = process.env.NODE_ENV || 'development';
-
     const configuration = {
         development: {
             host: '0.0.0.0',
@@ -33,32 +36,30 @@ const databaseConfig = {
 };
 
 const manifest = {
-    connections: [
-        {
-            host: envKey('host'),
-            port: envKey('port'),
-            routes: {
-                cors: true
-            },
-            router: {
-                stripTrailingSlash: true
+    server: {
+        host: envKey('host'),
+        port: envKey('port'),
+        debug: envKey('debug'),
+        routes: {
+            cors: {
+                origin: ['*'],
+                additionalHeaders: ['tui-app-img-bucket-size']
             }
+        },
+        router: {
+            stripTrailingSlash: true
         }
-    ],
-    registrations: [
-        {
-            plugin: {
-                register: 'inert',
-            }
-        },
-        {
-            plugin: {
-                register: 'vision',
-            }
-        },
-        {
-            plugin: {
-                register: './pg',
+    },
+    register: {
+        plugins: [
+            {
+                plugin: require('inert'),
+            },
+            {
+                plugin: require('vision'),
+            },
+            {
+                plugin: './pg',
                 options: {
                     development: {
                         ...databaseConfig,
@@ -71,26 +72,22 @@ const manifest = {
                         ...databaseConfig,
                     }
                 }
-            }
-        },
-        {
-            plugin: './api',
-            options: {
-                routes: {prefix: '/api'}
-            }
-        },
-        {
-            plugin: {
-                register: 'hapi-405-routes',
-                options: {
-                    methodsToSupport: ['GET', 'POST', 'DELETE', 'PUT', 'PATCH', 'TRACE'],
-                    setAllowHeader: true,
+            },
+            {
+                plugin: './api',
+                routes: {
+                    prefix: '/api'
                 }
-            }
-        },
-        {
-            plugin: {
-                register: 'hapi-swagger',
+            },
+            // {
+            //     plugin: require('hapi-405-routes'),
+            //     options: {
+            //         methodsToSupport: ['GET', 'POST', 'DELETE', 'PUT', 'PATCH', 'TRACE'],
+            //         setAllowHeader: true,
+            //     }
+            // },
+            {
+                plugin: require('hapi-swagger'),
                 options: {
                     tags: [{
                         name: 'api',
@@ -98,7 +95,7 @@ const manifest = {
                     }],
                     info: {
                         description: 'This is the ttrack API',
-                        version: packageJson.version,
+                        version: version,
                         title: 'ttrack API',
                         contact: {
                             email: 'ts@25th-floor.com',
@@ -110,40 +107,39 @@ const manifest = {
                     },
                     documentationPath: '/docs',
                 }
-            }
-        },
-        {
-            plugin: {
-                register: 'good',
+            },
+            {
+                plugin: require('good'),
                 options: {
                     reporters: {
                         console: [{
                             module: 'good-squeeze',
                             name: 'Squeeze',
                             args: [{
-                                log: '*',
-                                response: '*',
-                                error: '*',
+                                log: envKey('log'),
+                                response: envKey('response'),
+                                error: envKey('error'),
+                                format: 'DD.MM.YYYY hh:mm:ss',
                             }]
                         }, {
                             module: 'good-console',
-                            args: [{format: 'DD.MM.YYYY hh:mm:ss'}],
+                            args: [{
+                                format: 'DD.MM.YYYY hh:mm:ss'
+                            }],
                         }, 'stdout']
                     }
                 }
-            }
-        },
-        {
-            plugin: {
-                register: 'hapi-api-version',
+            },
+            {
+                plugin: require('hapi-api-version'),
                 options: {
-                    validVersions: packageJson.ttrackServer.validVersions,
-                    defaultVersion: packageJson.ttrackServer.apiVersion,
+                    validVersions: ttrackServer.validVersions,
+                    defaultVersion: ttrackServer.apiVersion,
                     vendorName: 'ttrack'
                 }
             }
-        }
-    ]
+        ]
+    }
 };
 
 module.exports = manifest;

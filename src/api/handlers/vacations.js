@@ -59,13 +59,13 @@ module.exports.list = {
             start: Joi.number().integer().min(0).default(0),
         }
     },
-    handler: async function (request, reply) {
+    handler: async function (request) {
         const total = await listTotal();
         let { start, limit } = request.query;
         if (start > total) start = total;
         if (limit > total) limit = total;
         const success = await list(start, limit);
-        reply({
+        return {
             _meta: {
                 total,
                 limit,
@@ -73,6 +73,6 @@ module.exports.list = {
                 count: success.length,
             },
             vacations: success
-        });
+        };
     },
 };

@@ -3,7 +3,9 @@ const Q = require('q');
 const moment = require('moment');
 const R = require('ramda');
 const User = require('./user');
-const { query } = require('../pg');
+const {
+    query
+} = require('../pg');
 
 /**
  * fetch day id for the specified date and user, creating the day if necessary
@@ -15,25 +17,31 @@ const { query } = require('../pg');
  * @returns {*} promise
  */
 async function fetchDayIdForUser(date, user, target) {
-    let { rows } = await query('SELECT day_id FROM days WHERE day_date = $1 AND day_usr_id = $2', [date, user.usr_id]);
-    if(R.head(rows)) return R.head(rows).day_id; 
- 
+    let {
+        rows
+    } = await query('SELECT day_id FROM days WHERE day_date = $1 AND day_usr_id = $2', [date, user.usr_id]);
+    if (R.head(rows)) return R.head(rows).day_id;
+
     const newDay = await query('INSERT INTO days VALUES (default, $1, $2, $3) RETURNING day_id', [date, user.usr_id, target]);
     return R.head(newDay.rows).day_id;
 }
 
 async function fetchPeriodTypes() {
-    const { rows } = await query('SElECT * FROM period_types');
+    const {
+        rows
+    } = await query('SElECT * FROM period_types');
     // creates from an array an object with obj.pty_name as key and obj.pty_id as value
-    return  R.reduce((acc,obj) => ({
+    return R.reduce((acc, obj) => ({
         ...acc,
         ...R.objOf(obj.pty_name)(obj.pty_id), //exp sick : 'krank'
-    }),{},rows);
+    }), {}, rows);
 }
 
 // TODO what das this ?
 function convertToTime(time) {
-    return time ? moment.duration(time).format('hh:mm:', { trim: false }) : null;
+    return time ? moment.duration(time).format('hh:mm:', {
+        trim: false
+    }) : null;
 }
 /**
  * Convert string(08:00)
@@ -41,7 +49,7 @@ function convertToTime(time) {
  * @returns {object} { hours:08, minutes: 00}
  */
 const convertToTimeObject = (value) => {
-    if(value === null) return value;
+    if (value === null) return value;
     const duration = moment.duration(value);
     return {
         hours: duration.get('hours') + (duration.get('days') * 24),
@@ -54,9 +62,9 @@ const convertToTimeObject = (value) => {
  * @param {Object} periodData 
  */
 function preparePeriodForApiResponse(periodData) {
-    if(!periodData) return periodData;
-    const containsKeys = R.allPass( [ R.hasIn('per_start'), R.hasIn('per_stop')] )(periodData);
-    
+    if (!periodData) return periodData;
+    const containsKeys = R.allPass([R.hasIn('per_start'), R.hasIn('per_stop')])(periodData);
+
     if (!containsKeys) return periodData;
     periodData.per_start = convertToTimeObject(periodData.per_start);
     periodData.per_stop = convertToTimeObject(periodData.per_stop);
@@ -71,16 +79,16 @@ module.exports = {
             JOIN days ON (per_day_id = day_id)
             WHERE per_id = $1
              AND day_usr_id = $2
-        `,
-            [id, userId]
-        ).then(({rows}) => preparePeriodForApiResponse(R.head(rows)));
+        `, [id, userId]).then(({
+            rows
+        }) => preparePeriodForApiResponse(R.head(rows)));
     },
     async post(userId, postData) {
         const user = await User.get(userId);
         const targetTime = await User.getTargetTime(userId, postData.date);
         const periodTypes = await fetchPeriodTypes();
         const dayId = await fetchDayIdForUser(postData.date, user, targetTime);
-        
+
         const data = postData;
         // TODO: check if pty_id is valid type if defined 
         // TODO No test defined for these case
@@ -105,7 +113,7 @@ module.exports = {
                 VALUES
                     ($1, $2, $3, $4, $5, $6) RETURNING *
             `;
-            const newPeriod =  await query(sql,[
+            const newPeriod = await query(sql, [
                 data.per_start,
                 data.per_stop,
                 data.per_break,
@@ -131,12 +139,14 @@ module.exports = {
             VALUES
                 ($1, $2, $3, $4) RETURNING *
         `;
-        const {rows} = await query(sql,[
+        const {
+            rows
+        } = await query(sql, [
             data.per_duration,
             data.per_comment,
             dayId,
-            data.per_pty_id]
-        );
+            data.per_pty_id
+        ]);
 
         return preparePeriodForApiResponse(R.head(rows));
     },
@@ -166,8 +176,7 @@ module.exports = {
                             per_pty_id = $5
                         WHERE
                             per_id = $6 RETURNING *
-                    `,
-                        [data.per_start, data.per_stop, data.per_break, data.per_comment, data.per_pty_id, data.per_id]);
+                    `, [data.per_start, data.per_stop, data.per_break, data.per_comment, data.per_pty_id, data.per_id]);
                 }
 
                 data.per_duration = convertToTime(data.per_duration);
@@ -183,10 +192,11 @@ module.exports = {
                         per_break = NULL
                     WHERE
                         per_id = $4 RETURNING *
-                `,
-                    [data.per_duration, data.per_comment, data.per_pty_id, data.per_id]);
+                `, [data.per_duration, data.per_comment, data.per_pty_id, data.per_id]);
             })
-            .then(({rows}) => preparePeriodForApiResponse(R.head(rows)));
+            .then(({
+                rows
+            }) => preparePeriodForApiResponse(R.head(rows)));
     },
     //TODO uniq parameter wording 
     delete(per_id, userId) {
@@ -209,7 +219,7 @@ module.exports = {
         return User.get(userId)
             .then(
                 (success) => {
-                    if(success) return query(sql, [per_id, userId]);
+                    if (success) return query(sql, [per_id, userId]);
                     return success;
                 }
             );

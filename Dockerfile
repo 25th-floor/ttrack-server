@@ -1,4 +1,4 @@
-FROM node:8.1.4
+FROM node:8.11.3
 
 ENV NODE_ENV production
 ENV HOST 0.0.0.0

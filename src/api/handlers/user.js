@@ -1,4 +1,3 @@
-// const User = require('../../resources/user');
 const BaseJoi = require('joi')
     , Extension = require('joi-date-extensions')
     , Boom = require('boom')
@@ -33,11 +32,9 @@ module.exports.list = {
             },
         },
     },
-    handler: function (request, reply) {
-        return UserResources.list()
-            .then(
-                success => reply(success),
-            );
+    handler: async function (request) {
+        const list = await UserResources.list();
+        return list;
     },
 };
 
@@ -66,13 +63,9 @@ module.exports.findById = {
             id: UserId.required()
         }
     },
-    handler: function (request, reply) {
-        return UserResources.get(request.params.id)
-            .then(
-                success => {
-                    if(success) return reply(success);
-                    return reply(Boom.create(404, `Could not find user with id ${request.params.id}'`));
-                },
-            );
+    handler: async function (request) {
+        const success = await UserResources.get(request.params.id);
+        if(success) return success;
+        return Boom.create(404, `Could not find user with id ${request.params.id}'`);
     }
 };

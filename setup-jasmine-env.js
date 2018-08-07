@@ -3,7 +3,7 @@
  */
 
 /*globals jasmine*/
-
+/*
 jasmine.VERBOSE = false;
 
 require('jasmine-expect');
@@ -22,3 +22,4 @@ if (process.env.TEAMCITY_VERSION) {
     var teamcity = new reporters.TeamCityReporter();
     jasmine.getEnv().addReporter(teamcity);
 }
+*/
