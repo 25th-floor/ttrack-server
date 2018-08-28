@@ -30,7 +30,7 @@ const databaseConfig = {
     password: process.env.DB_PASSWORD || 'postgres',
     database: process.env.DB_DATABASE || 'ttrack',
     port: process.env.DB_PORT || '5432',
-    host: process.env.DB_HOST || 'localhost',
+    host: process.env.DB_HOST || 'postgres',
     driver: process.env.DB_DRIVER || 'pg',
     schema: process.env.DB_SCHEMA || 'public'
 };

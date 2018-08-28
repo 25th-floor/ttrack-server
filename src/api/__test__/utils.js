@@ -10,7 +10,7 @@ export const testServer = axios.create({
 });
 
 export const createDatabaseConnection = async () => {
-    const connectionString = process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/ttrack_test';
+    const connectionString = process.env.DATABASE_URL || 'postgres://postgres:postgres@postgres:5432/ttrack_test';
     console.log(`✅  Database is Configured on ${connectionString}`);
 
     const pool = new pg.Pool({connectionString: connectionString});
