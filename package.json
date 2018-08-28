@@ -79,7 +79,7 @@
     "collectCoverage": true,
     "testEnvironment": "node",
     "roots": [
-      "./src/api"
+      "./src"
     ],
     "unmockedModulePathPatterns": [
       "jasmine-expect"

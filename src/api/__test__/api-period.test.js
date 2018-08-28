@@ -1,11 +1,7 @@
-import Glue from 'glue'; 
-import path from 'path';
-import R from 'ramda';
-import { query } from '../../pg';
-import manifest from '../../config/manifest'; 
-import { PERIOD_TYPE_IDS, createPeriodStubWithDayForUserAndDate } from '../../utils/testUtils';
+import { testServer, createDatabaseConnection } from './utils';
 
-const relativeTo = path.join(__dirname, '../../');
+import R from 'ramda';
+import { PERIOD_TYPE_IDS, createPeriodStubWithDayForUserAndDate } from '../../utils/testUtils';
 
 const createUserSql = 'SELECT * FROM create_user( $1, $2, $3, $4, $5)';
 
@@ -13,42 +9,23 @@ const apiCreatePath = (user) => `/api/users/${user}/periods/`;
 const apiPutAndDeletePath = (user,per_id) => `/api/users/${user}/periods/${per_id}`;
 
 describe('ttrack API',() => {
-    let Server;
-    beforeAll(async (done) => {
-        Glue.compose(manifest, { relativeTo }, (err, server) => {
-            if (err) {
-                console.log('server.register err:', err);
-            }
-            server.start(() => {
-                server.log('✅  Server is listening on ' + server.info.uri.toLowerCase());
-                Server = server;
-                done();
-            });
-        });
-    });
-
-    afterAll(async (done) => {
-        Server.log('STOP SERVER');
-        await Server.stop();
-        done();
-    });
-
     describe('Periods /api/users/{id}/periods', async ()=>{
-
         let user;
+        let client;
         beforeAll(async (done) => {
-            user = await query(createUserSql,['Mister', 'Smith', 'mister@smith.com','2001-01-01', '38:30:00']);
+            client = await createDatabaseConnection();
+            user = await client.query(createUserSql,['Mister', 'Smith', 'mister@smith.com','2001-01-01', '38:30:00']);
             user = R.head(user.rows);
             done();
         });
 
         afterAll(async (done) => {
-            await query(`DELETE FROM days WHERE day_usr_id = ${user.usr_id}`);
-            await query(`DELETE FROM user_target_times WHERE utt_usr_id = ${user.usr_id}`);
-            await query(`DELETE FROM users WHERE usr_id = ${user.usr_id}`);
+            await client.query(`DELETE FROM days WHERE day_usr_id = ${user.usr_id}`);
+            await client.query(`DELETE FROM user_target_times WHERE utt_usr_id = ${user.usr_id}`);
+            await client.query(`DELETE FROM users WHERE usr_id = ${user.usr_id}`);
             done();
         });
-
+        /*
         describe('Test Method not implemented', () => {
             it(`Should fail method is not implemented GET on ${apiCreatePath('{user.usr_id}')}`, async ()=>{
                 const response  = await Server.inject({ method: 'GET' , url: apiCreatePath(user.usr_id) });
@@ -67,46 +44,51 @@ describe('ttrack API',() => {
                 expect(response.statusCode).toBe(405);
             });
         });
+        */
 
         describe("testing create(POST)", async () => {
             it("should fail with missing date", async () => {
-                const response  = await Server.inject({ method: 'POST', payload:{} , url: apiCreatePath(user.usr_id) });
-                expect(response.statusCode).toBe(400);
-                expect(response.result.message).toBe('child "date" fails because ["date" is required]');
+                let error;
+                await testServer.post(apiCreatePath(user.usr_id), {})
+                    .catch(e => error = e);
+                expect(error.response.status).toBe(400);
+                expect(error.response.data.message).toBe('child "date" fails because ["date" is required]');
             });
-            
+
             it("should fail with missing Period Type", async () => {
-                const response  = await Server.inject({ method: 'POST', payload:{ "date": "2001-01-01" } , url: apiCreatePath(user.usr_id) });
-                expect(response.statusCode).toBe(400);
-                expect(response.result.message).toBe('child "per_pty_id" fails because ["per_pty_id" is required]');
+                let error;
+                await testServer.post(apiCreatePath(user.usr_id), {"date": "2001-01-01" })
+                    .catch(e => error = e);
+                expect(error.response.status).toBe(400);
+                expect(error.response.data.message).toBe('child "per_pty_id" fails because ["per_pty_id" is required]');
             });
             
             it("should fail with missing per_start‌⁠", async () => {
-                const response  = await Server.inject({ 
-                    method: 'POST',
-                    payload: {
+                let error;
+                await testServer.post(
+                    apiCreatePath(user.usr_id),
+                    {
                         "date": "2001-01-01",
                         "per_pty_id": "Work" 
-                    },
-                    url: apiCreatePath(user.usr_id) 
-                });
-                expect(response.statusCode).toBe(400);
-                expect(response.result.message).toBe('child "per_start" fails because ["per_start" is required]');
+                    }
+                )
+                    .catch(e => error = e);
+                expect(error.response.status).toBe(400);
+                expect(error.response.data.message).toBe('child "per_start" fails because ["per_start" is required]');
             });
 
             it("should succeed on success", async () => {
-                const response  = await Server.inject({ 
-                    method: 'POST',
-                    payload: {
+                const {data, status} = await testServer.post(
+                    apiCreatePath(user.usr_id),
+                    {
                         "date": "2001-01-01",
                         "per_pty_id": "Work",
                         "per_start": "PT8H",
-                    },
-                    url: apiCreatePath(user.usr_id)
-                });
+                    }
+                );
 
-                expect(response.statusCode).toBe(201);
-                expect(response.result).toMatchObject({
+                expect(status).toBe(201);
+                expect(data).toMatchObject({
                     "per_break": null,
                     "per_comment": null,
                     "per_pty_id": "Work",
@@ -120,20 +102,19 @@ describe('ttrack API',() => {
             });
 
             it("should set duration correctly", async () => {
-                const response  = await Server.inject({ 
-                    method: 'POST',
-                    payload: {
+                const {data, status} = await testServer.post(
+                    apiCreatePath(user.usr_id),
+                    {
                         "per_pty_id": "Work",
                         "per_comment": null,
                         "per_start": "PT8H",
                         "per_stop": "PT10H",
                         "date": "2001-01-02",
-                    },
-                    url: apiCreatePath(user.usr_id)
-                });
-                
-                expect(response.statusCode).toBe(201);
-                expect(response.result).toMatchObject({
+                    }
+                );
+
+                expect(status).toBe(201);
+                expect(data).toMatchObject({
                     "per_break": null,
                     "per_comment": null,
                     "per_pty_id": "Work",
@@ -150,20 +131,19 @@ describe('ttrack API',() => {
             });
 
             it("should set break correctly", async () => {
-                const response  = await Server.inject({ 
-                    method: 'POST',
-                    payload: {
+                const {data, status} = await testServer.post(
+                    apiCreatePath(user.usr_id),
+                    {
                         "per_pty_id": "Work",
                         "per_start": "PT8H",
                         "per_stop": "PT10H",
                         "per_break": "PT30M",
                         "date": "2001-01-02",
-                    },
-                    url: apiCreatePath(user.usr_id)
-                });
+                    }
+                );
 
-                expect(response.statusCode).toBe(201);
-                expect(response.result).toMatchObject({
+                expect(status).toBe(201);
+                expect(data).toMatchObject({
                     "per_break": {
                         "minutes": 30
                     },
@@ -182,21 +162,19 @@ describe('ttrack API',() => {
             });
 
             it("should set comments", async () => {
-                const response  = await Server.inject({ 
-                    method: 'POST',
-                    payload: {
+                const {data, status} = await testServer.post(
+                    apiCreatePath(user.usr_id),
+                    {
                         "per_pty_id": "Work",
                         "per_start": "PT8H",
                         "per_stop": "PT10H",
                         "per_break": "PT30M",
                         "per_comment": "example",
                         "date": "2001-01-02",
-                    },
-                    url: apiCreatePath(user.usr_id)
-                });
-
-                expect(response.statusCode).toBe(201);
-                expect(response.result).toMatchObject({
+                    }
+                );
+                expect(status).toBe(201);
+                expect(data).toMatchObject({
                     "per_break": {
                         "minutes": 30
                     },
@@ -215,20 +193,19 @@ describe('ttrack API',() => {
             });
 
             it("should work with fullday duration", async () => {
-                const response  = await Server.inject({
-                    method: 'POST',
-                    payload: {
+                const {data, status} = await testServer.post(
+                    apiCreatePath(user.usr_id),
+                    {
                         "date": "2001-01-01",
                         "per_pty_id": "Sick",
                         "per_duration": "PT7H42M",
                         "per_start": null,
                         "per_stop": null,
-                    },
-                    url: apiCreatePath(user.usr_id)
-                });
+                    }
+                );
 
-                expect(response.statusCode).toBe(201);
-                expect(response.result).toMatchObject({
+                expect(status).toBe(201);
+                expect(data).toMatchObject({
                     "per_pty_id": "Sick",
                     "per_start": null,
                     "per_stop": null,
@@ -248,13 +225,10 @@ describe('ttrack API',() => {
                         "date": `2001-02-${index + 1}`,
                     };
 
-                    const response = await Server.inject({
-                        method: 'POST',
-                        payload,
-                        url: apiCreatePath(user.usr_id)
-                    });
-                    expect(response.statusCode).toBe(201);
-                    expect(response.result).toMatchObject({
+                    const {data, status} = await testServer.post(apiCreatePath(user.usr_id), payload );
+    
+                    expect(status).toBe(201);
+                    expect(data).toMatchObject({
                         per_pty_id: type,
                         per_start: {
                             hours: 8,
@@ -268,21 +242,21 @@ describe('ttrack API',() => {
                 }); 
             });
         });
-        
+
         describe("testing udpate(PUT)", () => {
             let period;
             const date = '2001-03-01';
 
             beforeAll(async (done) => {
-                period = await createPeriodStubWithDayForUserAndDate(user.usr_id, date);
+                period = await createPeriodStubWithDayForUserAndDate(client, user.usr_id, date);
                 done();
             });
 
             afterAll(async (done) => {
-                await query(`DELETE FROM days WHERE day_id = ${period.per_day_id}`);
+                await client.query(`DELETE FROM days WHERE day_id = ${period.per_day_id}`);
                 done();
             });
-
+            /*
             describe('Test Method not implemented', () => {
                 it(`Should fail method is not implemented GET on ${apiCreatePath('{user.usr_id}')}`, async ()=>{
                     const response  = await Server.inject({ method: 'GET' , url: apiPutAndDeletePath(user.usr_id, period.per_id) });
@@ -297,85 +271,86 @@ describe('ttrack API',() => {
                     expect(response.statusCode).toBe(405);
                 });
             });
-            
+            */
             it(`should return 404 Status code on PUT with userID of 0`, async ()=>{
-                const response  = await Server.inject({ 
-                    method: 'PUT',
-                    payload: {
+                let status;
+                await testServer.put(
+                    apiPutAndDeletePath(0, period.per_id),
+                    {
                         date,
                         "per_pty_id": 'Work',
                         "per_start": "PT8H",
-                    },
-                    url: apiPutAndDeletePath(0, period.per_id) });
-                expect(response.statusCode).toBe(404);
+                    }
+                )
+                    .catch(error => status = error.response.status);
+                expect(status).toBe(404);
             });
 
             it(`should return 404 Status code on PUT with period.per_id of 0`, async ()=>{
-                const response  = await Server.inject({ 
-                    method: 'PUT',
-                    payload: {
+                let status;
+                await testServer.put(
+                    apiPutAndDeletePath(user.usr_id, 0),
+                    {
                         date,
                         "per_pty_id": 'Work',
                         "per_start": "PT8H",
-                    },
-                    url: apiPutAndDeletePath(user.usr_id, 0) });
-                expect(response.statusCode).toBe(404);
+                    }
+                )
+                    .catch(error => status = error.response.status);
+                expect(status).toBe(404);
             });
 
             it(`should return 404 Status code on DELETE with user.usr_id of 0`, async ()=>{
-                const response  = await Server.inject({ 
-                    method: 'DELETE',
-                    url: apiPutAndDeletePath(0, user.usr_id) });
-                expect(response.statusCode).toBe(404);
+                let status;
+                await testServer.delete(apiPutAndDeletePath(0, user.usr_id))
+                    .catch(error => status = error.response.status);
+                expect(status).toBe(404);
             });
 
             it("should fail if payload is empty", async () => {
-                const response  = await Server.inject({ 
-                    method: 'PUT',
-                    payload: {},
-                    url: apiPutAndDeletePath(user.usr_id, period.per_id)
-                });
-                expect(response.statusCode).toBe(400);
-                expect(response.result.message).toBe('child "date" fails because ["date" is required]');
+                let error;
+                await testServer.put(apiPutAndDeletePath(user.usr_id, period.per_id), {})
+                    .catch(e => error = e);
+                expect(error.response.status).toBe(400);
+                expect(error.response.data.message).toBe('child "date" fails because ["date" is required]');
             });
 
             it("should fail if missing the period type", async () => {
-                const response  = await Server.inject({ 
-                    method: 'PUT',
-                    payload: {
-                        date,
-                    },
-                    url: apiPutAndDeletePath(user.usr_id, period.per_id)
-                });
-                expect(response.statusCode).toBe(400);
-                expect(response.result.message).toBe('child "per_pty_id" fails because ["per_pty_id" is required]');
+                let error;
+                await testServer.put(
+                    apiPutAndDeletePath(user.usr_id, period.per_id),
+                    { date }
+                )
+                    .catch(e => error = e);
+                expect(error.response.status).toBe(400);
+                expect(error.response.data.message).toBe('child "per_pty_id" fails because ["per_pty_id" is required]');
             });
 
             it("should fail if missing start", async () => {
-                const response  = await Server.inject({ 
-                    method: 'PUT',
-                    payload: {
+                let error;
+                await testServer.put(
+                    apiPutAndDeletePath(user.usr_id, period.per_id),
+                    {
                         date,
                         per_pty_id: 'Work',
-                    },
-                    url: apiPutAndDeletePath(user.usr_id, period.per_id)
-                });
-                expect(response.statusCode).toBe(400);
-                expect(response.result.message).toBe('child "per_start" fails because ["per_start" is required]');
+                    }
+                )
+                    .catch(e => error = e);
+                expect(error.response.status).toBe(400);
+                expect(error.response.data.message).toBe('child "per_start" fails because ["per_start" is required]');
             });
 
             it("should work on success", async () => {
-                const response  = await Server.inject({ 
-                    method: 'PUT',
-                    payload: {
+                const {data, status} = await testServer.put(
+                    apiPutAndDeletePath(user.usr_id, period.per_id),
+                    {
                         date,
-                        "per_pty_id": 'Work',
+                        per_pty_id: 'Work',
                         "per_start": "PT8H",
-                    },
-                    url: apiPutAndDeletePath(user.usr_id, period.per_id)
-                });
-                expect(response.statusCode).toBe(200);
-                expect(response.result).toMatchObject({
+                    }
+                );
+                expect(status).toBe(200);
+                expect(data).toMatchObject({
                     "per_break": null,
                     "per_comment": null,
                     "per_pty_id": "Work",
@@ -396,13 +371,9 @@ describe('ttrack API',() => {
                     per_start: "PT8H",
                     per_day_id: period.per_day_id + 1,
                 };
-                const response  = await Server.inject({ 
-                    method: 'PUT',
-                    payload,
-                    url: apiPutAndDeletePath(user.usr_id, period.per_id)
-                });
-                expect(response.statusCode).toBe(200);
-                expect(response.result).toMatchObject({
+                const {data, status} = await testServer.put(apiPutAndDeletePath(user.usr_id, period.per_id), payload);
+                expect(status).toBe(200);
+                expect(data).toMatchObject({
                     "per_break": null,
                     "per_comment": null,
                     "per_day_id": period.per_day_id,
@@ -423,30 +394,30 @@ describe('ttrack API',() => {
                     per_start: "PT8H",
                 };
                 const wrongId = period.per_id+100000;
-                const response  = await Server.inject({
-                    method: 'PUT',
-                    payload,
-                    url: apiPutAndDeletePath(user.usr_id, wrongId)
-                });
-                expect(response.statusCode).toBe(404);
-                expect(response.result.message).toBe(`Could not find period with id '${wrongId}'`);
-            });
 
+                let error;
+                await testServer
+                    .put(apiPutAndDeletePath(user.usr_id, wrongId), payload)
+                    .catch(e => error = e);
+                expect(error.response.status).toBe(404);
+                expect(error.response.data.message).toBe(`Could not find period with id '${wrongId}'`);
+            });
+            
             describe("with another user", () => {
                 let anotherUser;
                 let anotherPeriod;
 
                 beforeAll(async (done) => {
-                    const result = await query(createUserSql,['Mister', 'Anderson', 'mister@anderson.com','2001-01-01', '38:30:00']);
+                    const result = await client.query(createUserSql,['Mister', 'Anderson', 'mister@anderson.com','2001-01-01', '38:30:00']);
                     anotherUser = R.head(result.rows);
-                    anotherPeriod = await createPeriodStubWithDayForUserAndDate(anotherUser.usr_id, date);
+                    anotherPeriod = await createPeriodStubWithDayForUserAndDate(client, anotherUser.usr_id, date);
                     done();
                 });
 
                 afterAll(async (done) => {
-                    await query(`DELETE FROM days WHERE day_usr_id = ${anotherUser.usr_id}`);
-                    await query(`DELETE FROM user_target_times WHERE utt_usr_id = ${anotherUser.usr_id}`);
-                    await query(`DELETE FROM users WHERE usr_id = ${anotherUser.usr_id}`);
+                    await client.query(`DELETE FROM days WHERE day_usr_id = ${anotherUser.usr_id}`);
+                    await client.query(`DELETE FROM user_target_times WHERE utt_usr_id = ${anotherUser.usr_id}`);
+                    await client.query(`DELETE FROM users WHERE usr_id = ${anotherUser.usr_id}`);
                     done();
                 });
 
@@ -456,13 +427,12 @@ describe('ttrack API',() => {
                         per_pty_id: 'Work',
                         per_start: "PT8H",
                     };
-                    const response  = await Server.inject({
-                        method: 'PUT',
-                        payload,
-                        url: apiPutAndDeletePath(user.usr_id, anotherPeriod.per_id)//?
-                    });
-                    expect(response.statusCode).toBe(404);
-                    expect(response.result.message).toBe(`Could not find period with id '${anotherPeriod.per_id}'`);
+                    let error;
+                    await testServer
+                        .put(apiPutAndDeletePath(user.usr_id, anotherPeriod.per_id), payload)
+                        .catch(e => error = e);
+                    expect(error.response.status).toBe(404);
+                    expect(error.response.data.message).toBe(`Could not find period with id '${anotherPeriod.per_id}'`);
                 });
             });
         });
@@ -472,33 +442,26 @@ describe('ttrack API',() => {
             const date = '2001-03-01';
 
             beforeAll(async (done) => {
-                period = await createPeriodStubWithDayForUserAndDate(user.usr_id, date);
+                period = await createPeriodStubWithDayForUserAndDate(client, user.usr_id, date);
                 done();
             });
 
             afterAll(async (done) => {
-                await query(`DELETE FROM days WHERE day_id = ${period.per_day_id}`);
+                await client.query(`DELETE FROM days WHERE day_id = ${period.per_day_id}`);
                 done();
             });
 
             it("should delete the period", async () => {
-                const response  = await Server.inject({ 
-                    method: 'DELETE',
-                    payload: {},
-                    url: apiPutAndDeletePath(user.usr_id, period.per_id)
-                });
-                expect(response.statusCode).toBe(204);
-                const result = await query(`SELECT * from periods WHERE per_id = ${period.per_id}`);
+                const {data, status} = await testServer.delete(apiPutAndDeletePath(user.usr_id, period.per_id));
+                expect(status).toBe(204);
+
+                const result = await client.query(`SELECT * from periods WHERE per_id = ${period.per_id}`);
                 expect(result.rows.length).toBe(0);
             });
 
             it("should not throw any errors if period is unknown", async () => { 
-                const response  = await Server.inject({  
-                    method: 'DELETE', 
-                    payload: {}, 
-                    url: apiPutAndDeletePath(user.usr_id, period.per_id+10000) 
-                }); 
-                expect(response.statusCode).toBe(204); 
+                const {data, status} = await testServer.delete(apiPutAndDeletePath(user.usr_id, period.per_id+10000));
+                expect(status).toBe(204);
             }); 
         });
     });

@@ -4,9 +4,6 @@
 
 // import pg from 'pg';
 import { keys, values, range } from 'ramda';
-import { query } from '../pg';
-
-//import dbConfigFile from './../../database.json';
 
 // Constants
 
@@ -26,26 +23,26 @@ const createDatabaseArguments = obj => ({
     values: values(obj),
 });
 
-async function createEntity(table, entity) {
+async function createEntity(client, table, entity) {
     const arg = createDatabaseArguments(entity);
     const cols = arg.keys.join(',');
     const pl = arg.placeholder.join(',');
-    const { rows } = await query(`INSERT INTO ${table} (${cols}) VALUES (${pl}) RETURNING *;`, arg.values);
+    const { rows } = await client.query(`INSERT INTO ${table} (${cols}) VALUES (${pl}) RETURNING *;`, arg.values);
     return rows[0];
 }
 
-export async function createDay(day) {
-    return await createEntity('days', day);
+export async function createDay(client, day) {
+    return await createEntity(client, 'days', day);
 }
 
-export async function createPeriod(period) {
-    return await createEntity('periods', period);
+export async function createPeriod(client, period) {
+    return await createEntity(client, 'periods', period);
 }
 
 // Additional Database Calls
 
-export async function getTargetTimeForUserAndDate(userId, date) {
-    const { rows } = await query(
+export async function getTargetTimeForUserAndDate(client, userId, date) {
+    const { rows } = await client.query(
         'SELECT user_get_target_time FROM user_get_target_time($1, $2::DATE)',
         [userId, date],
     );
@@ -61,15 +58,15 @@ export async function getTargetTimeForUserAndDate(userId, date) {
  * @param date
  * @returns {Promise.<*>}
  */
-export async function createPeriodStubWithDayForUserAndDate(userId, date) {
-    const target = await getTargetTimeForUserAndDate(userId, date);
+export async function createPeriodStubWithDayForUserAndDate(client, userId, date) {
+    const target = await getTargetTimeForUserAndDate(client, userId, date);
 
     const dayFixture = {
         day_date: date,
         day_usr_id: userId,
         day_target_time: target,
     };
-    const day = await createDay(dayFixture);
+    const day = await createDay(client, dayFixture);
 
     // create period
     const periodFixture = {
@@ -77,5 +74,5 @@ export async function createPeriodStubWithDayForUserAndDate(userId, date) {
         per_day_id: day.day_id,
         per_pty_id: 'Work',
     };
-    return await createPeriod(periodFixture);
+    return await createPeriod(client, periodFixture);
 }

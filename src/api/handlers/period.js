@@ -32,6 +32,10 @@ module.exports.create = {
             .options({ allowUnknown: true }),
         params: {
             userId: UserId.required(),
+        },
+        // return validation error, which is disabled by default in hapi 17
+        failAction: async (request, h, err) => {
+            throw err;
         }
     },
     handler: async function (request, header){
@@ -39,9 +43,7 @@ module.exports.create = {
         const { userId } = request.params;
         request.server.log(['Info'],[`API POST Request for Period for user ${userId}`,data]);
         const period = await PeriodResources.post(userId, { ...data, userId });
-        return header
-            .code(201)
-            .response(period);
+        return header.response(period).code(201);
     }
 };
 
@@ -71,6 +73,10 @@ module.exports.update = {
         params:{
             userId: UserId.required(),
             per_id: PeriodId.required(),
+        },
+        // return validation error, which is disabled by default in hapi 17
+        failAction: async (request, h, err) => {
+            throw err;
         }
     },
     handler: async function (request){
@@ -80,7 +86,7 @@ module.exports.update = {
         // validate if user has this period
         const period = await PeriodResources.get(per_id, userId);
         if (!period || R.isEmpty(period)) {
-            return Boom.create(404, `Could not find period with id '${per_id}'`);
+            return new Boom(`Could not find period with id '${per_id}'`, { statusCode: 404 });
         }
 
         const updated = await PeriodResources.put(userId, { ...data, userId, per_id });
@@ -108,6 +114,10 @@ module.exports.delete = {
         params:{
             userId: UserId.required(),
             per_id: PeriodId.required(),
+        },
+        // return validation error, which is disabled by default in hapi 17
+        failAction: async (request, h, err) => {
+            throw err;
         }
     },
     handler: async function (request, header){
@@ -115,8 +125,8 @@ module.exports.delete = {
         request.server.log(['Info'],[` API PUT DELETE for Period ${per_id} for user ${userId}`]);
         const res = await PeriodResources.delete(per_id, userId);
 
-        if(!res) return Boom.create(404, `Could not find period with id '${per_id} for user ${userId}'`);
+        if(!res) return new Boom(`Could not find period with id '${per_id} for user ${userId}'`, { statusCode: 404 });
         
-        return header.code(204);
+        return header.response().code(204);
     }
 };

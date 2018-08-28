@@ -43,7 +43,6 @@ const manifest = {
         routes: {
             cors: {
                 origin: ['*'],
-                additionalHeaders: ['tui-app-img-bucket-size']
             }
         },
         router: {
