@@ -41,12 +41,16 @@ module.exports.timesheetFromToById = {
                 .example('2017-05-01')
                 .min(Joi.ref('from')) // It is important that .min is below example see https://github.com/hapijs/joi/issues/1186
                 .required(), 
-        })
+        }),
+        // return validation error, which is disabled by default in hapi 17
+        failAction: async (request, h, err) => {
+            throw err;
+        }
     },
     handler: async function (request){
         const { userId, from ,to } = request.params;
         const timesheet = await TimesheetResources.get(userId, from, to);
         if(timesheet) return timesheet;
-        return Boom.create(404, `Could not find timesheet for user ${userId}'`);
+        return new Boom(`Could not find timesheet for user ${userId}'`, { statusCode: 404 });
     }
 };
