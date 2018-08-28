@@ -13,7 +13,7 @@ const envKey = key => {
         },
         test: {
             host: '0.0.0.0',
-            port: process.env.PORT || 8001
+            port: 8001
         },
         // These should match environment variables on hosted server
         production: {
@@ -30,7 +30,7 @@ const databaseConfig = {
     password: process.env.DB_PASSWORD || 'postgres',
     database: process.env.DB_DATABASE || 'ttrack',
     port: process.env.DB_PORT || '5432',
-    host: process.env.DB_HOST || 'postgres',
+    host: process.env.DB_HOST || 'localhost',
     driver: process.env.DB_DRIVER || 'pg',
     schema: process.env.DB_SCHEMA || 'public'
 };

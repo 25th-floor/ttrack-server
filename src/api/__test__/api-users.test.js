@@ -1,47 +1,29 @@
-import Glue from 'glue';
-import path from 'path';
+import { testServer, createDatabaseConnection } from './utils';
+import JasmineExpect from 'jasmine-expect'; /* eslint-disable-line no-unused-vars */
+
 import R from 'ramda';
 import moment from 'moment';
 
-import { query, getClient } from '../../pg';
-import manifest from '../../config/manifest';
-
-const relativeTo = path.join(__dirname, '../../');
 const dummyUserSql = 'INSERT INTO users (usr_firstname , usr_lastname, usr_email) VALUES ( $1, $2, $3 ) RETURNING *';
 
-const apiUserPath = (user) => `/api/users/${user}`;
+// const apiUserPath = (user) => `/api/users/${user}`;
+
+jest.setTimeout(15000);
 
 describe('ttrack API', () => {
-    let Server;
-    beforeAll(async (done) => {
-        Glue.compose(manifest, { relativeTo }, (err, server) => {
-            if (err) {
-                console.log('server.register err:', err);
-            }
-            server.start(() => {
-                Server = server;
-                Server.log('✅  Server is listening on ' + server.info.uri.toLowerCase());
-                done();
-            });
-        });
-    });
-
-    afterAll(async (done) => {
-        await Server.stop();
-        done();
-    });
-
     describe("Users /api/users", async () => {
         let user;
-        beforeAll(async (done) => {
-            user = await query(dummyUserSql, ['Mister', 'Smith', 'mister@smith.com']);
+        let client;
+        beforeAll(async () => {
+            client = await createDatabaseConnection();
+
+            user = await client.query(dummyUserSql, ['Mister', 'Smith', 'mister@smith.com']);
             user = R.head(user.rows);
-            done();
         });
 
-        afterAll(async (done) => {
-            await query(`DELETE FROM users WHERE usr_id = ${user.usr_id}`);
-            done();
+        afterAll(async () => {
+            await client.query(`DELETE FROM users WHERE usr_id = ${user.usr_id}`);
+            await client.release();
         });
 
         describe('Database Tests', () => {
@@ -54,7 +36,7 @@ describe('ttrack API', () => {
                     usr_employment_start: null,
                     usr_employment_end: null
                 }];
-                const res = await query('SELECT * FROM users WHERE usr_id = $1', [user.usr_id]);
+                const res = await client.query('SELECT * FROM users WHERE usr_id = $1', [user.usr_id]);
                 expect(res.rows).toEqual(result);
             });
 
@@ -69,7 +51,6 @@ describe('ttrack API', () => {
                         usr_employment_start: null,
                         usr_employment_end: null
                     }];
-                    const client = await getClient();
                     const resultOne = await client.query('SELECT * FROM users WHERE usr_id = $1', [user.usr_id]);
                     const resultTwo = await client.query('SELECT * FROM users WHERE usr_id = $1', [user.usr_id]);
                     client.release();
@@ -91,13 +72,13 @@ describe('ttrack API', () => {
 
             it('GET Api /api/users returns our users', async () => {
                 //let uri = Server.lookup('UserList').path;
-                const response = await Server.inject({ method: 'GET', url: '/api/users', });
-                expect(response.statusCode).toBe(200);
-                expect(response.result).toBeArrayOfObjects();
+                const {data, status} = await testServer.get('/api/users');
+                expect(status).toEqual(200);
+                expect(data).toBeArrayOfObjects();//?
 
                 const users = R.filter(
                     R.propEq('usr_id',user.usr_id)
-                )(response.result);
+                )(data);
 
                 expect(R.head(users)).toMatchObject({
                     ...userFixture,
@@ -110,14 +91,16 @@ describe('ttrack API', () => {
                     ...userFixture,
                     usr_id: user.usr_id,
                 }];
-                const response = await Server.inject({ method: 'GET', url: `/api/users/${user.usr_id}` });
-                expect(response.statusCode).toBe(200);
-                expect(response.result).toEqual(R.head(result));
+                const {data, status} = await testServer.get(`/api/users/${user.usr_id}`);
+                expect(status).toBe(200);
+                expect(data).toEqual(R.head(result));
             });
 
             it(`should return 404 with user id 0`, async () => {
-                const response = await Server.inject({ method: 'GET', url: `/api/users/${0}` });
-                expect(response.statusCode).toBe(404);
+                let status;
+                await testServer.get(`/api/users/${0}`)
+                    .catch(error => status = error.response.status);
+                expect(status).toBe(404);
             });
 
             it('should return users that are only available within this month', async () => {
@@ -126,21 +109,21 @@ describe('ttrack API', () => {
                 const end = today.clone().add(1, 'month').format("YYYY-MM-DD");
 
                 const sql = 'UPDATE users SET usr_employment_start = $1, usr_employment_end = $2 WHERE usr_id = $3 RETURNING *';
-                await query(sql, [start, end, user.usr_id]);
+                await client.query(sql, [start, end, user.usr_id]);
 
-                const response = await Server.inject({ method: 'GET', url: '/api/users', });
-                expect(response.statusCode).toBe(200);
-                expect(response.result).toBeArrayOfObjects();
+                const {data, status} = await testServer.get('/api/users');
+                expect(status).toEqual(200);
+                expect(data).toBeArrayOfObjects();
 
                 const users = R.filter(
                     R.propEq('usr_id',user.usr_id)
-                )(response.result);
+                )(data);
 
                 expect(R.head(users)).toMatchObject({
                     ...user,
                     usr_id: user.usr_id,
-                    usr_employment_start: new Date(start),
-                    usr_employment_end: new Date(end)
+                    usr_employment_start: new Date(start).toISOString(),
+                    usr_employment_end: new Date(end).toISOString()
                 });
             });
 
@@ -150,41 +133,42 @@ describe('ttrack API', () => {
                 const end = today.clone().subtract(1, 'day').format("YYYY-MM-DD");
 
                 const sql = 'UPDATE users SET usr_employment_start = $1, usr_employment_end = $2 WHERE usr_id = $3 RETURNING *';
-                await query(sql, [start, end, user.usr_id]);
+                await client.query(sql, [start, end, user.usr_id]);
 
-                const response = await Server.inject({ method: 'GET', url: '/api/users', });
-                expect(response.statusCode).toBe(200);
-                expect(response.result).toBeArrayOfObjects();
+                const {data, status} = await testServer.get('/api/users');
+                expect(status).toEqual(200);
+                expect(data).toBeArrayOfObjects();
 
                 const users = R.filter(
                     R.propEq('usr_id',user.usr_id)
-                )(response.result);
+                )(data);
 
                 expect(users).toBeEmptyArray();
             });
         });
-
+    /*
         describe('Test Method not implemented', ()=>{
             it(`Should fail method is not implemented POST on /api/users`, async ()=>{
-                const response  = await Server.inject({ method: 'POST' , url: '/api/users' });
-                expect(response.statusCode).toBe(405);
+                const {status} = await testServer.post('/api/users', {});
+                expect(status).toEqual(405);
             });
 
             it(`Should fail method is not implemented PUT on ${apiUserPath('{user.usr_id}')}`, async () => {
-                const PUT = await Server.inject({ method: 'PUT', url: `/api/users/${user.usr_id}` });
-                expect(PUT.statusCode).toBe(405);
+                const {status} = await testServer.put(`/api/users/${user.usr_id}`, {});
+                expect(status).toEqual(405);
             });
 
             it(`Should fail method is not implemented DELETE on ${apiUserPath('{user.usr_id}')}`, async () => {
-                const DELETEmethod = await Server.inject({ method: 'DELETE', url: `/api/users/${user.usr_id}` });
-                expect(DELETEmethod.statusCode).toBe(405);
+                const {status} = await testServer.delete(`/api/users/${user.usr_id}`);
+                expect(status).toEqual(405);
             });
 
             it(`Should fail method is not implemented PATCH on ${apiUserPath('{user.usr_id}')}`, async () => {
-                const DELETEmethod = await Server.inject({ method: 'PATCH', url: `/api/users/${user.usr_id}` });
-                expect(DELETEmethod.statusCode).toBe(405);
+                const {status} = await testServer.patch(`/api/users/${user.usr_id}`, {});
+                expect(status).toEqual(405);
             });
 
         });
+    */
     });
 });

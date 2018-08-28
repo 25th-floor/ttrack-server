@@ -65,6 +65,6 @@ module.exports.findById = {
     handler: async function (request) {
         const success = await UserResources.get(request.params.id);
         if(success) return success;
-        return Boom.create(404, `Could not find user with id ${request.params.id}'`);
+        return new Boom(`Could not find user with id ${request.params.id}'`, { statusCode: 404 });
     }
 };
