@@ -57,6 +57,10 @@ module.exports.list = {
         query: {
             limit: Joi.number().integer().min(1).max(100).default(100),
             start: Joi.number().integer().min(0).default(0),
+        },
+        // return validation error, which is disabled by default in hapi 17
+        failAction: async (request, h, err) => {
+            throw err;
         }
     },
     handler: async function (request) {
